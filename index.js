@@ -2,16 +2,12 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 
-const path = require("path");
-
 app.use(express.static("public"));
 
 app.get("/", function (req, res) {
   console.log("eee aha");
   return res.send("Dc bot suno ai home page");
 });
-
-app.get("");
 
 app.listen(process.env.SERVER_PORT, () => {
   console.log(`Server ready on port ${process.env.SERVER_PORT}.`);

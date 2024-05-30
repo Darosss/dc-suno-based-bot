@@ -6,6 +6,8 @@ const {
 } = require("@discordjs/voice");
 const { musicFolder } = require("./globals");
 const { getMp3Duration } = require("./mp3.utils");
+const path = require("path");
+
 class PlayerQueue {
   constructor() {
     this.items = [];
@@ -71,8 +73,7 @@ class PlayerQueue {
     this.playTimeout = setTimeout(() => {
       try {
         this.currentSong = this.dequeue();
-        const songPath = `${musicFolder}\\${this.currentSong}`;
-        console.log(songPath, "jaki path");
+        const songPath = path.join(musicFolder, this.currentSong);
         const resource = createAudioResource(songPath);
 
         this.audioPlayer.play(resource);

@@ -10,6 +10,7 @@ function startPlayCommand(message) {
   files.forEach((mp3File) => {
     PlayerQueue.enqueue(mp3File);
   });
+  console.log(files, "aha");
 
   if (files.length === 0) {
     return message.reply("No music files found in the /music folder.");

@@ -80,3 +80,6 @@ web-build/
 music/*
 # but keep the folder
 !music/.gitkeep
+
+
+.vercel

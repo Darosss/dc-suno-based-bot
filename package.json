@@ -5,7 +5,7 @@
   "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node api/index.ts",
+    "start": "node index.js",
     "build": ""
   },
   "keywords": [],
@@ -13,7 +13,6 @@
   "license": "ISC",
   "dependencies": {
     "@discordjs/voice": "^0.17.0",
-    "@vercel/postgres": "^0.7.2",
     "cheerio": "^1.0.0-rc.12",
     "discord.js": "^14.15.2",
     "dotenv": "^16.4.1",

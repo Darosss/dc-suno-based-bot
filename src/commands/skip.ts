@@ -1,9 +1,12 @@
 import PlayerQueue from "@/src/player-queue";
-import { TODO } from "@/src/types";
+import { Message } from "discord.js";
 
-export const skipCommand = (message: TODO) => {
-  if (message.member.id !== process.env.OWNER_ID)
-    return message.reply("Only owner can do this (for now) ");
+export const skipCommand = (message: Message) => {
+  if (message.member?.id === process.env.OWNER_ID) {
+  } else if (message.member?.id !== PlayerQueue.getCurrentSong()?.requester) {
+    return message.reply("You can skip only yours songs");
+  }
+
   PlayerQueue.skip(message);
 
   return message.reply("Song skipped!");

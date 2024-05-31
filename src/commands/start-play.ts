@@ -1,14 +1,17 @@
 import PlayerQueue from "@/src/player-queue";
 import { getMp3FromMusicFolder } from "@/utils/mp3.utils";
-import { TODO } from "@/src/types";
+import { Message } from "discord.js";
 
-export const startPlayCommand = (message: TODO) => {
-  if (message.member.id !== process.env.OWNER_ID)
+export const startPlayCommand = (message: Message) => {
+  if (message.member?.id !== process.env.OWNER_ID)
     return message.reply("Only owner can do this (for now) ");
   const files = getMp3FromMusicFolder().sort(() => 0.5 - Math.random());
 
   files.forEach((mp3File) => {
-    PlayerQueue.enqueue(mp3File);
+    PlayerQueue.enqueue({
+      name: mp3File,
+      requester: message.author.id
+    });
   });
   console.log(files, "aha");
 

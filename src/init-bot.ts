@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits } from "discord.js";
+import { ActivityType, Client, GatewayIntentBits } from "discord.js";
 import { startPlayCommand } from "./commands/start-play";
 import { playCommand } from "./commands/play";
 import { skipCommand } from "./commands/skip";
@@ -18,6 +18,16 @@ const client = new Client({
 });
 client.once("ready", () => {
   console.log(`Logged in as ${client.user?.tag}`);
+
+  client.user?.setPresence({
+    activities: [
+      {
+        name: `*${process.env.COMMANDS_PREFIX}${COMMANDS.commands.name}* for help`,
+        type: ActivityType.Custom,
+        state: ""
+      }
+    ]
+  });
 });
 client.on("messageCreate", async (dcMessage) => {
   if (!dcMessage.content.startsWith(COMMANDS_PREFIX)) return;

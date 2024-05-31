@@ -48,8 +48,9 @@ client.on("messageCreate", async (dcMessage) => {
     skipCommand(dcMessage);
   else if (messageContentWithoutPrefix.startsWith(COMMANDS.stop.name))
     stopCommand(dcMessage);
-  else messageContentWithoutPrefix.startsWith(COMMANDS.commands.name);
-  commandsListCommand(dcMessage);
+  else if (messageContentWithoutPrefix.startsWith(COMMANDS.commands.name)) {
+    commandsListCommand(dcMessage);
+  }
 });
 
 client.login(process.env.BOT_TOKEN);

@@ -1,15 +1,36 @@
-const { load: cherrioLoad } = require("cheerio");
-const fs = require("fs");
-const https = require("https");
+import { load as cherrioLoad } from "cheerio";
+import fs from "fs";
+import https from "https";
+import { MUSIC_FOLDER } from "./globals";
+type SongData = {
+  fileNameTitle: string;
+  songId: string;
+};
 
-function downloadMP3(url, downloadPath) {
+type CommonReturnDownload = {
+  message: string;
+  fileName?: string;
+};
+
+(async () => {
+  try {
+    await fs.promises.mkdir(MUSIC_FOLDER, { recursive: true });
+  } catch (err) {
+    console.error(`Error creating directory ${MUSIC_FOLDER}:`, err);
+  }
+})();
+
+export const downloadMP3 = async (
+  url: string,
+  absoluteDownloadPath: string
+): Promise<CommonReturnDownload> => {
   return new Promise((resolve, reject) => {
     return https
       .get(url, (res) => {
         let data = "";
-        const songData = {
+        const songData: SongData = {
           fileNameTitle: "",
-          songId: url.split("/").at(-1)
+          songId: url.split("/").at(-1) || ""
         };
         res.on("data", (chunk) => {
           data += chunk;
@@ -19,14 +40,14 @@ function downloadMP3(url, downloadPath) {
           const $ = cherrioLoad(data);
           const foundTitleSplitted = $("title").text().split("by");
 
-          if (foundTitleSplitted.length <= 1 && foundTitleSplitted)
+          if (foundTitleSplitted.length <= 1 && foundTitleSplitted.at(0))
             return resolve({ message: "Song isn't found" });
 
-          songData.fileNameTitle = foundTitleSplitted.at(0).trim();
+          songData.fileNameTitle = foundTitleSplitted.at(0)!.trim();
 
           const { /*message*/ fileName } = await getMp3AndDownload(
             songData,
-            downloadPath
+            absoluteDownloadPath
           );
           return resolve({ fileName, message: `Added ${fileName}` });
         });
@@ -36,11 +57,14 @@ function downloadMP3(url, downloadPath) {
         reject({ message: "Some error occured" });
       });
   });
-}
+};
 
-async function getMp3AndDownload(songData, downloadPath) {
+const getMp3AndDownload = async (
+  songData: SongData,
+  absoluteDownloadPath: string
+): Promise<CommonReturnDownload> => {
   const fileName = `${songData.fileNameTitle} - ${songData.songId}.mp3`;
-  const filePath = `${downloadPath}/${fileName}`;
+  const filePath = `${absoluteDownloadPath}/${fileName}`;
   if (!fs.existsSync(filePath)) {
     return new Promise((resolve, reject) => {
       https
@@ -64,6 +88,4 @@ async function getMp3AndDownload(songData, downloadPath) {
   } else {
     return { message: `${fileName} already exists.`, fileName };
   }
-}
-
-module.exports = { downloadMP3 };
+};

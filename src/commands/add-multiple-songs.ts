@@ -1,21 +1,28 @@
-const { downloadMP3 } = require("../download-logic");
-const COMMANDS = require("./commands-list");
+import { downloadMP3 } from "../download-logic";
+import { TODO } from "@/src/types";
+import { CommandsType } from "./commands-list";
+import { MUSIC_FOLDER } from "../globals";
 
-const downloadFolder = "music";
 const MAX_SONGS = 5;
-const baseWrongMessageReply = `_Give me correct songs ids each separated by [;] (semicolon)_
-- example: 
-\`${process.env.COMMANDS_PREFIX}${COMMANDS.ADD_MULTIPLE_SONGS} https://suno.com/song/04db00ab-f7d7-40f8-a584-124b096beb31;https://suno.com/song/f1d5aad1-ec23-42e7-9e47-2617ea2de69a`;
 
-async function addMultipleSongs(message) {
-  const messageSplited = message.content.split(COMMANDS.ADD_MULTIPLE_SONGS);
+const baseWrongMessageReply = (
+  commandName: string
+) => `_Give me correct songs urls with ids each separated by [;] (semicolon)_
+- example: 
+\`${process.env.COMMANDS_PREFIX}${commandName} https://suno.com/song/04db00ab-f7d7-40f8-a584-124b096beb31;https://suno.com/song/f1d5aad1-ec23-42e7-9e47-2617ea2de69a`;
+
+export async function addMultipleSongs(
+  message: TODO,
+  commandData: CommandsType
+) {
+  const messageSplited = message.content.split(commandData.name);
 
   const songsUrls = messageSplited.at(-1);
 
   if (songsUrls.length <= 0) {
-    return message.reply(baseWrongMessageReply);
+    return message.reply(baseWrongMessageReply(commandData.name));
   } else {
-    const songsUrlSplittedUnique = Array.from(
+    const songsUrlSplittedUnique = Array.from<TODO>(
       new Set(songsUrls.split(";"))
     ).filter((url) => url.includes("https://suno.com/song/"));
     if (songsUrlSplittedUnique.length >= MAX_SONGS) {
@@ -26,7 +33,7 @@ async function addMultipleSongs(message) {
     for await (const songUrl of songsUrlSplittedUnique) {
       const { message: downloadMessage } = await downloadMP3(
         songUrl.trim(),
-        downloadFolder
+        MUSIC_FOLDER
       );
       messagesToSend.push(downloadMessage);
     }
@@ -34,5 +41,3 @@ async function addMultipleSongs(message) {
     return message.reply(messagesToSend.join("\n"));
   }
 }
-
-module.exports = { addMultipleSongs };

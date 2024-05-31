@@ -1,3 +1,4 @@
-const path = require("path");
-const musicFolder = path.join(__dirname, "music");
-module.exports = { musicFolder };
+import path from "path";
+
+export const DOWNLOAD_MUSIC_FOLDER = "music";
+export const MUSIC_FOLDER = path.join(__dirname, DOWNLOAD_MUSIC_FOLDER);

@@ -1,8 +1,8 @@
-const fs = require("fs");
-const PlayerQueue = require("../player-queue");
-const { getMp3FromMusicFolder } = require("../mp3.utils");
+import PlayerQueue from "@/src/player-queue";
+import { getMp3FromMusicFolder } from "@/utils/mp3.utils";
+import { TODO } from "@/src/types";
 
-function startPlayCommand(message) {
+export const startPlayCommand = (message: TODO) => {
   if (message.member.id !== process.env.OWNER_ID)
     return message.reply("Only owner can do this (for now) ");
   const files = getMp3FromMusicFolder().sort(() => 0.5 - Math.random());
@@ -24,5 +24,4 @@ function startPlayCommand(message) {
   PlayerQueue.setConnection(channel).then(() => {
     PlayerQueue.start(message);
   });
-}
-module.exports = { startPlayCommand };
+};

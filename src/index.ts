@@ -1,5 +1,7 @@
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 require("dotenv").config();
-const express = require("express");
+import "module-alias/register";
+import express from "express";
 const app = express();
 
 app.use(express.static("public"));

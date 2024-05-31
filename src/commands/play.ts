@@ -1,27 +1,30 @@
-const { downloadMP3 } = require("../download-logic");
-const COMMANDS = require("./commands-list");
-const PlayerQueue = require("../player-queue");
-const downloadFolder = "music";
-const { getMp3FromMusicFolder } = require("../mp3.utils");
+import { downloadMP3 } from "@/src/download-logic";
+import { CommandsType } from "./commands-list";
+import PlayerQueue from "@/src/player-queue";
+import { getMp3FromMusicFolder } from "@/utils/mp3.utils";
+import { TODO } from "@/src/types";
+import { MUSIC_FOLDER } from "@/src/globals";
+import { Message } from "discord.js";
+import { removeCommandNameFromMessage } from "../utils/dc.utils";
+const baseWrongMessageReply = (commandName: string) =>
+  `Give me correct command - example: ${process.env.COMMANDS_PREFIX}${commandName} https://suno.com/song/04db00ab-f7d7-40f8-a584-124b096beb31`;
 
-const baseWrongMessageReply = `Give me correct command - example: ${process.env.COMMANDS_PREFIX}${COMMANDS.PLAY} https://suno.com/song/04db00ab-f7d7-40f8-a584-124b096beb31`;
-
-async function playCommand(message) {
-  const messageSplited = message.content.split(COMMANDS.PLAY);
-
+export const playCommand = async (message: TODO, commandData: CommandsType) => {
+  const songUrlOrName = removeCommandNameFromMessage(
+    message.content,
+    commandData
+  );
   if (!message.content.includes("https://suno.com/song/"))
-    return findByName(message, messageSplited.at(-1));
+    findByName(message, songUrlOrName);
 
-  const songUrl = messageSplited.at(-1);
-
-  const songId = songUrl.split("/").at(-1);
+  const songId = songUrlOrName.split("/").at(-1);
 
   if (!songId) {
-    return message.reply(baseWrongMessageReply);
+    return message.reply(baseWrongMessageReply(commandData.name));
   } else {
     const { message: downloadMessage, fileName } = await downloadMP3(
-      songUrl,
-      downloadFolder
+      songUrlOrName,
+      MUSIC_FOLDER
     );
     if (!fileName) return;
 
@@ -39,9 +42,10 @@ async function playCommand(message) {
 
     return message.reply(downloadMessage);
   }
-}
-function findByName(message, songName) {
-  const channel = message.member.voice.channel;
+};
+
+function findByName(message: Message, songName: string) {
+  const channel = message.member?.voice.channel;
 
   if (!channel) {
     return message.reply("You need to join a voice channel first!");
@@ -60,5 +64,3 @@ function findByName(message, songName) {
   });
   return message.reply(`Added ${foundName}`);
 }
-
-module.exports = { playCommand };

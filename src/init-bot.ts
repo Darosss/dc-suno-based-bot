@@ -1,10 +1,10 @@
-const { Client, GatewayIntentBits } = require("discord.js");
-const { startPlayCommand } = require("./commands/start-play");
-const { playCommand } = require("./commands/play");
-const { skipCommand } = require("./commands/skip");
-const { stopCommand } = require("./commands/stop");
-const COMMANDS = require("./commands/commands-list");
-const { addMultipleSongs } = require("./commands/add-multiple-songs");
+import { Client, GatewayIntentBits } from "discord.js";
+import { startPlayCommand } from "./commands/start-play";
+import { playCommand } from "./commands/play";
+import { skipCommand } from "./commands/skip";
+import { stopCommand } from "./commands/stop";
+import { COMMANDS } from "./commands/commands-list";
+import { addMultipleSongs } from "./commands/add-multiple-songs";
 
 const COMMANDS_PREFIX = process.env.COMMANDS_PREFIX;
 const client = new Client({
@@ -19,25 +19,27 @@ const client = new Client({
 client.once("ready", () => {
   console.log(`Logged in as ${client.user?.tag}`);
 });
-client.on("messageCreate", async (message) => {
-  if (message.content.startsWith(`${COMMANDS_PREFIX}${COMMANDS.PLAY}`))
-    playCommand(message);
-  else if (
-    message.content.startsWith(
-      `${COMMANDS_PREFIX}${COMMANDS.ADD_MULTIPLE_SONGS}`
-    )
-  ) {
-    addMultipleSongs(message);
+client.on("messageCreate", async (dcMessage) => {
+  if (!dcMessage.content.startsWith(COMMANDS_PREFIX)) return;
+
+  const messageContentWithoutPrefix = dcMessage.content.slice(
+    COMMANDS_PREFIX.length
+  );
+
+  if (messageContentWithoutPrefix.startsWith(COMMANDS.play.name)) {
+    playCommand(dcMessage, COMMANDS.play);
   } else if (
-    message.content.startsWith(`${COMMANDS_PREFIX}${COMMANDS.START_PLAY}`)
-  )
-    startPlayCommand(message);
-  else if (message.content.startsWith(`${COMMANDS_PREFIX}${COMMANDS.SKIP}`))
-    skipCommand(message);
-  else if (message.content.startsWith(`${COMMANDS_PREFIX}${COMMANDS.STOP}`))
-    stopCommand(message);
+    messageContentWithoutPrefix.startsWith(COMMANDS["add many songs"].name)
+  ) {
+    addMultipleSongs(dcMessage, COMMANDS["add many songs"]);
+  } else if (messageContentWithoutPrefix.startsWith(COMMANDS.radio.name))
+    startPlayCommand(dcMessage);
+  else if (messageContentWithoutPrefix.startsWith(COMMANDS.skip.name))
+    skipCommand(dcMessage);
+  else if (messageContentWithoutPrefix.startsWith(COMMANDS.stop.name))
+    stopCommand(dcMessage);
 });
 
 client.login(process.env.BOT_TOKEN);
 
-module.exports = client;
+export { client };

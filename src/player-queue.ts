@@ -1,14 +1,26 @@
-const {
+import {
   VoiceConnectionStatus,
   joinVoiceChannel,
   createAudioPlayer,
-  createAudioResource
-} = require("@discordjs/voice");
-const { musicFolder } = require("./globals");
-const { getMp3Duration } = require("./mp3.utils");
-const path = require("path");
+  createAudioResource,
+  VoiceConnection,
+  AudioPlayer
+} from "@discordjs/voice";
+import { MUSIC_FOLDER } from "@/src/globals";
+import { getMp3Duration } from "@/utils/mp3.utils";
+import path from "path";
+import { Message, VoiceBasedChannel } from "discord.js";
+
+type EnqueueOptions = { resume: boolean; message: Message };
+
+type PlayerQueueItemType = string;
 
 class PlayerQueue {
+  private items: PlayerQueueItemType[];
+  private playTimeout: NodeJS.Timeout | null;
+  private connection: VoiceConnection | null;
+  private audioPlayer: AudioPlayer | null;
+  private currentSong: string;
   constructor() {
     this.items = [];
     this.playTimeout = null;
@@ -17,7 +29,8 @@ class PlayerQueue {
     this.audioPlayer = null;
   }
 
-  enqueue(item, { resume = false, message } = {}) {
+  enqueue(item: PlayerQueueItemType, options?: EnqueueOptions) {
+    const { resume, message } = options || {};
     this.items.push(item);
     console.log(`Item ${item} inserted`);
     if (resume && message && this.playTimeout === null) {
@@ -26,7 +39,7 @@ class PlayerQueue {
   }
 
   clearPlayTimeout() {
-    clearTimeout(this.playTimeout);
+    this.playTimeout ? clearTimeout(this.playTimeout) : null;
     this.playTimeout = null;
   }
 
@@ -52,10 +65,10 @@ class PlayerQueue {
     console.log(this.items.join(", "));
   }
 
-  async setConnection(channel) {
+  async setConnection(channel: VoiceBasedChannel) {
     this.connection = joinVoiceChannel({
       channelId: channel.id,
-      guildId: channel.guild.id,
+      guildId: channel.guildId,
       adapterCreator: channel.guild.voiceAdapterCreator
     });
     this.connection.on(VoiceConnectionStatus.Ready, () => {
@@ -64,7 +77,7 @@ class PlayerQueue {
     this.audioPlayer = createAudioPlayer();
   }
 
-  start(message, delay = 1000) {
+  start(message: Message, delay = 1000) {
     if (this.isEmpty()) {
       return message.reply("Add more songs to play :)");
     }
@@ -72,9 +85,12 @@ class PlayerQueue {
 
     this.playTimeout = setTimeout(() => {
       try {
-        this.currentSong = this.dequeue();
-        const songPath = path.join(musicFolder, this.currentSong);
+        this.currentSong = this.dequeue() || "";
+        const songPath = path.join(MUSIC_FOLDER, this.currentSong);
         const resource = createAudioResource(songPath);
+
+        if (!this.audioPlayer || !this.connection)
+          return console.error("No audio player or connection :(");
 
         this.audioPlayer.play(resource);
 
@@ -106,12 +122,12 @@ class PlayerQueue {
 
   stop() {
     this.clearPlayTimeout();
-    this.audioPlayer.stop();
+    this.audioPlayer?.stop();
     this.items = [];
   }
 
-  skip(message) {
-    this.audioPlayer.stop();
+  skip(message: Message) {
+    this.audioPlayer?.stop();
 
     if (this.isEmpty()) {
       this.clearPlayTimeout();
@@ -121,4 +137,4 @@ class PlayerQueue {
   }
 }
 
-module.exports = new PlayerQueue();
+export default new PlayerQueue();

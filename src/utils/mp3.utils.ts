@@ -1,8 +1,8 @@
-const fs = require("fs");
-const mp3Duration = require("mp3-duration");
-const { musicFolder } = require("./globals");
+import fs from "fs";
+import mp3Duration from "mp3-duration";
+import { MUSIC_FOLDER } from "@/src/globals";
 
-function getMp3Duration(mp3FilePath) {
+export const getMp3Duration = async (mp3FilePath: string): Promise<number> => {
   return new Promise((resolve, reject) => {
     mp3Duration(mp3FilePath, (err, duration) => {
       if (err) {
@@ -12,10 +12,6 @@ function getMp3Duration(mp3FilePath) {
       }
     });
   });
-}
-
-function getMp3FromMusicFolder() {
-  return fs.readdirSync(musicFolder).filter((file) => file.endsWith(".mp3"));
-}
-
-module.exports = { getMp3Duration, getMp3FromMusicFolder };
+};
+export const getMp3FromMusicFolder = () =>
+  fs.readdirSync(MUSIC_FOLDER).filter((file) => file.endsWith(".mp3"));

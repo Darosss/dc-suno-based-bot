@@ -66,6 +66,10 @@ class PlayerQueue {
     console.log(this.items.join(", "));
   }
 
+  getCurrentSong() {
+    return this.currentSong;
+  }
+
   async setConnection(channel: VoiceBasedChannel) {
     this.connection = joinVoiceChannel({
       channelId: channel.id,
@@ -87,7 +91,8 @@ class PlayerQueue {
     this.playTimeout = setTimeout(() => {
       try {
         this.currentSong = this.dequeue() || null;
-        if (!this.currentSong) return console.error("No current song to play");
+        if (!this.currentSong?.name)
+          return console.error("No current song to play");
         const songPath = path.join(MUSIC_FOLDER, this.currentSong.name);
         const resource = createAudioResource(songPath);
 
@@ -97,7 +102,7 @@ class PlayerQueue {
         this.audioPlayer.play(resource);
 
         this.connection.subscribe(this.audioPlayer);
-
+        console.log(songPath, "eee");
         getMp3Duration(songPath)
           .then((duration) => {
             message.reply(

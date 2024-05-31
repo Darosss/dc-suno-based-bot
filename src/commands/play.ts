@@ -44,7 +44,7 @@ export const playCommand = async (message: TODO, commandData: CommandsType) => {
   }
 };
 
-function findByName(message: Message, songName: string) {
+const findByName = (message: Message, songName: string) => {
   const channel = message.member?.voice.channel;
 
   if (!channel) {
@@ -63,4 +63,4 @@ function findByName(message: Message, songName: string) {
     });
   });
   return message.reply(`Added ${foundName}`);
-}
+};

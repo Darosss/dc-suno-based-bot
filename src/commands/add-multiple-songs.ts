@@ -11,10 +11,10 @@ const baseWrongMessageReply = (
 - example: 
 \`${process.env.COMMANDS_PREFIX}${commandName} https://suno.com/song/04db00ab-f7d7-40f8-a584-124b096beb31;https://suno.com/song/f1d5aad1-ec23-42e7-9e47-2617ea2de69a`;
 
-export async function addMultipleSongs(
+export const addMultipleSongs = async (
   message: TODO,
   commandData: CommandsType
-) {
+) => {
   const messageSplited = message.content.split(commandData.name);
 
   const songsUrls = messageSplited.at(-1);
@@ -40,4 +40,4 @@ export async function addMultipleSongs(
 
     return message.reply(messagesToSend.join("\n"));
   }
-}
+};

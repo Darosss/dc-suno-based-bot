@@ -1,4 +1,4 @@
-import { TODO } from "@/src/types";
+import { Message } from "discord.js";
 
 export type COMMANDS_NAMES =
   | "play"
@@ -30,7 +30,7 @@ export const COMMANDS: Record<COMMANDS_NAMES, CommandsType> = {
   }
 };
 
-export const commandsListCommand = (message: TODO) => {
+export const commandsListCommand = (message: Message) => {
   const commandsListMsg = Object.values(COMMANDS).map(
     (command) =>
       `\`${process.env.COMMANDS_PREFIX}${command.name}\` - ${command.description}`

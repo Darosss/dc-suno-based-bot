@@ -13,26 +13,26 @@ import { Message, VoiceBasedChannel } from "discord.js";
 
 type EnqueueOptions = { resume: boolean; message: Message };
 
-type PlayerQueueItemType = string;
+type PlayerQueueItemType = { name: string; requester: string };
 
 class PlayerQueue {
   private items: PlayerQueueItemType[];
   private playTimeout: NodeJS.Timeout | null;
   private connection: VoiceConnection | null;
   private audioPlayer: AudioPlayer | null;
-  private currentSong: string;
+  private currentSong: PlayerQueueItemType | null;
   constructor() {
     this.items = [];
     this.playTimeout = null;
     this.connection = null;
-    this.currentSong = "";
+    this.currentSong = null;
     this.audioPlayer = null;
   }
 
   enqueue(item: PlayerQueueItemType, options?: EnqueueOptions) {
     const { resume, message } = options || {};
     this.items.push(item);
-    console.log(`Item ${item} inserted`);
+    console.log(`Item ${item.name} by ${item.requester} inserted`);
     if (resume && message && this.playTimeout === null) {
       this.start(message);
     }
@@ -45,7 +45,8 @@ class PlayerQueue {
 
   dequeue() {
     if (this.isEmpty()) {
-      return console.log("No items in queue");
+      console.log("No items in queue");
+      return null;
     }
     return this.items.shift();
   }
@@ -85,8 +86,9 @@ class PlayerQueue {
 
     this.playTimeout = setTimeout(() => {
       try {
-        this.currentSong = this.dequeue() || "";
-        const songPath = path.join(MUSIC_FOLDER, this.currentSong);
+        this.currentSong = this.dequeue() || null;
+        if (!this.currentSong) return console.error("No current song to play");
+        const songPath = path.join(MUSIC_FOLDER, this.currentSong.name);
         const resource = createAudioResource(songPath);
 
         if (!this.audioPlayer || !this.connection)
@@ -100,10 +102,10 @@ class PlayerQueue {
           .then((duration) => {
             message.reply(
               `------
-              Now playing: \`${this.currentSong}\`
+              Now playing: \`${this.currentSong!.name}\`  
               ${
                 this.peek()
-                  ? `Next(in ${Math.floor(duration)} sec)  \`${this.peek()} \``
+                  ? `Next(in ${Math.floor(duration)} sec)  \`${this.peek()?.name} \``
                   : ""
               }`
             );

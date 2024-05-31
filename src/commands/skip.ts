@@ -7,7 +7,7 @@ export const skipCommand = (message: Message) => {
     return message.reply("You can skip only yours songs");
   }
 
-  PlayerQueue.skip(message);
+  const skipped = PlayerQueue.skip(message);
 
-  return message.reply("Song skipped!");
+  return skipped ? message.reply("Song skipped!") : null;
 };

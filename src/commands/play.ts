@@ -5,6 +5,7 @@ import { getMp3FromMusicFolder } from "@/utils/mp3.utils";
 import { MUSIC_FOLDER } from "@/src/globals";
 import { removeCommandNameFromMessage } from "../utils/dc.utils";
 import { Message } from "discord.js";
+
 const baseWrongMessageReply = (commandName: string) =>
   `Give me correct command - example: ${process.env.COMMANDS_PREFIX}${commandName} https://suno.com/song/04db00ab-f7d7-40f8-a584-124b096beb31`;
 
@@ -45,7 +46,6 @@ export const playCommand = async (
       { resume: true, message }
     );
   });
-
   if (songToPlayName) return message.reply(`Added ${songToPlayName}`);
 };
 

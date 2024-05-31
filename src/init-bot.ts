@@ -5,6 +5,7 @@ import { skipCommand } from "./commands/skip";
 import { stopCommand } from "./commands/stop";
 import { COMMANDS, commandsListCommand } from "./commands/commands-list";
 import { addMultipleSongs } from "./commands/add-multiple-songs";
+import { canUserUseCommands } from "./utils/dc.utils";
 
 const COMMANDS_PREFIX = process.env.COMMANDS_PREFIX;
 const client = new Client({
@@ -36,17 +37,30 @@ client.on("messageCreate", async (dcMessage) => {
     COMMANDS_PREFIX.length
   );
 
-  if (messageContentWithoutPrefix.startsWith(COMMANDS.play.name)) {
+  if (
+    messageContentWithoutPrefix.startsWith(COMMANDS.play.name) &&
+    canUserUseCommands(dcMessage)
+  ) {
     playCommand(dcMessage, COMMANDS.play);
   } else if (
-    messageContentWithoutPrefix.startsWith(COMMANDS["add many songs"].name)
+    messageContentWithoutPrefix.startsWith(COMMANDS["add many songs"].name) &&
+    canUserUseCommands(dcMessage)
   ) {
     addMultipleSongs(dcMessage, COMMANDS["add many songs"]);
-  } else if (messageContentWithoutPrefix.startsWith(COMMANDS.radio.name))
+  } else if (
+    messageContentWithoutPrefix.startsWith(COMMANDS.radio.name) &&
+    canUserUseCommands(dcMessage)
+  )
     startPlayCommand(dcMessage, COMMANDS.radio);
-  else if (messageContentWithoutPrefix.startsWith(COMMANDS.skip.name))
+  else if (
+    messageContentWithoutPrefix.startsWith(COMMANDS.skip.name) &&
+    canUserUseCommands(dcMessage)
+  )
     skipCommand(dcMessage);
-  else if (messageContentWithoutPrefix.startsWith(COMMANDS.stop.name))
+  else if (
+    messageContentWithoutPrefix.startsWith(COMMANDS.stop.name) &&
+    canUserUseCommands(dcMessage)
+  )
     stopCommand(dcMessage);
   else if (messageContentWithoutPrefix.startsWith(COMMANDS.commands.name)) {
     commandsListCommand(dcMessage);

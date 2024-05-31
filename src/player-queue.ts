@@ -71,6 +71,7 @@ class PlayerQueue {
   }
 
   async setConnection(channel: VoiceBasedChannel) {
+    if (this.connection) return;
     this.connection = joinVoiceChannel({
       channelId: channel.id,
       guildId: channel.guildId,
@@ -141,8 +142,10 @@ class PlayerQueue {
 
     if (this.isEmpty()) {
       this.clearPlayTimeout();
+      return false;
     } else {
       this.start(message);
+      return true;
     }
   }
 }

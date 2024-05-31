@@ -15,3 +15,12 @@ export const getMp3Duration = async (mp3FilePath: string): Promise<number> => {
 };
 export const getMp3FromMusicFolder = () =>
   fs.readdirSync(MUSIC_FOLDER).filter((file) => file.endsWith(".mp3"));
+
+export const isMp3Available = async (filePath: string) => {
+  try {
+    await fs.promises.access(filePath, fs.constants.F_OK);
+    return true;
+  } catch (err) {
+    return false;
+  }
+};

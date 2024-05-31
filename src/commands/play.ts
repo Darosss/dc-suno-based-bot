@@ -33,7 +33,7 @@ async function playCommand(message) {
     PlayerQueue.setConnection(channel).then(() => {
       PlayerQueue.enqueue(fileName, {
         resume: true,
-        message,
+        message
       });
     });
 
@@ -55,7 +55,7 @@ function findByName(message, songName) {
   PlayerQueue.setConnection(channel).then(() => {
     PlayerQueue.enqueue(foundName, {
       resume: true,
-      message,
+      message
     });
   });
   return message.reply(`Added ${foundName}`);

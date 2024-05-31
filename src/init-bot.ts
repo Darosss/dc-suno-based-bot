@@ -13,8 +13,8 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildVoiceStates,
-  ],
+    GatewayIntentBits.GuildVoiceStates
+  ]
 });
 client.once("ready", () => {
   console.log(`Logged in as ${client.user?.tag}`);

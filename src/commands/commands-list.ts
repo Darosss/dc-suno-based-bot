@@ -3,7 +3,7 @@ const COMMANDS = {
   SKIP: "skip",
   STOP: "stop",
   START_PLAY: "radio",
-  ADD_MULTIPLE_SONGS: "add many songs",
+  ADD_MULTIPLE_SONGS: "add many songs"
 };
 
 module.exports = COMMANDS;

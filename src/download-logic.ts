@@ -9,7 +9,7 @@ function downloadMP3(url, downloadPath) {
         let data = "";
         const songData = {
           fileNameTitle: "",
-          songId: url.split("/").at(-1),
+          songId: url.split("/").at(-1)
         };
         res.on("data", (chunk) => {
           data += chunk;
@@ -52,7 +52,7 @@ async function getMp3AndDownload(songData, downloadPath) {
             stream.close();
             return resolve({
               message: `File ${songData.fileNameTitle} downloaded.`,
-              fileName,
+              fileName
             });
           });
         })

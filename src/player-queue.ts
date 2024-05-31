@@ -2,7 +2,7 @@ const {
   VoiceConnectionStatus,
   joinVoiceChannel,
   createAudioPlayer,
-  createAudioResource,
+  createAudioResource
 } = require("@discordjs/voice");
 const { musicFolder } = require("./globals");
 const { getMp3Duration } = require("./mp3.utils");
@@ -56,7 +56,7 @@ class PlayerQueue {
     this.connection = joinVoiceChannel({
       channelId: channel.id,
       guildId: channel.guild.id,
-      adapterCreator: channel.guild.voiceAdapterCreator,
+      adapterCreator: channel.guild.voiceAdapterCreator
     });
     this.connection.on(VoiceConnectionStatus.Ready, () => {
       console.log("The bot has connected to the channel!");

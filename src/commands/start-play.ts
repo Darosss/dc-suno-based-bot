@@ -49,4 +49,6 @@ export const startPlayCommand = (
   PlayerQueue.setConnection(channel).then(() => {
     PlayerQueue.start(message);
   });
+
+  message.reply(`Loaded ${maxSongs} songs`);
 };

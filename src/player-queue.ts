@@ -7,7 +7,7 @@ import {
   AudioPlayer
 } from "@discordjs/voice";
 import { MUSIC_FOLDER } from "@/src/globals";
-import { getMp3Duration } from "@/utils/mp3.utils";
+import { getMp3Duration, isMp3Available } from "@/utils/mp3.utils";
 import path from "path";
 import { Message, VoiceBasedChannel } from "discord.js";
 
@@ -94,6 +94,10 @@ class PlayerQueue {
         if (!this.currentSong?.name)
           return console.error("No current song to play");
         const songPath = path.join(MUSIC_FOLDER, this.currentSong.name);
+        if (!isMp3Available(songPath)) {
+          console.log("No file found, skip");
+          this.start(message, 1000);
+        }
         const resource = createAudioResource(songPath);
 
         if (!this.audioPlayer || !this.connection)
@@ -102,7 +106,6 @@ class PlayerQueue {
         this.audioPlayer.play(resource);
 
         this.connection.subscribe(this.audioPlayer);
-        console.log(songPath, "eee");
         getMp3Duration(songPath)
           .then((duration) => {
             message.reply(

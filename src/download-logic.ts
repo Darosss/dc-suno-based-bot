@@ -44,16 +44,22 @@ export const downloadMP3 = async (
             return resolve({ message: "Song isn't found" });
 
           songData.fileNameTitle = foundTitleSplitted.at(0)!.trim();
-
-          const { /*message*/ fileName } = await getMp3AndDownload(
-            songData,
-            absoluteDownloadPath
-          );
-          return resolve({ fileName, message: `Added ${fileName}` });
+          try {
+            const { message, fileName } = await getMp3AndDownload(
+              songData,
+              absoluteDownloadPath
+            );
+            if (!fileName) return resolve({ message });
+            return resolve({ fileName, message: `Added ${fileName}` });
+          } catch (error) {
+            throw error;
+          }
         });
       })
       .on("error", (err) => {
-        console.error("Error: " + err.message);
+        console.error(
+          "Error occured while trying to get song name :" + err.message
+        );
         reject({ message: "Some error occured" });
       });
   });
@@ -79,9 +85,18 @@ const getMp3AndDownload = async (
               fileName
             });
           });
+          stream.on("error", (err) => {
+            console.error(
+              "Error occured while trying to save mp3:",
+              err.message
+            );
+            return resolve({ message: "Probably can't play this file" });
+          });
         })
         .on("error", (err) => {
-          console.error("Error: " + err.message);
+          console.error(
+            "Error occured while trying to get mp3 from site: " + err.message
+          );
           reject({ message: "Something went wrong." });
         });
     });

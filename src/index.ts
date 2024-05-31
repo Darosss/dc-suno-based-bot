@@ -7,7 +7,6 @@ const app = express();
 app.use(express.static("public"));
 
 app.get("/", function (req, res) {
-  console.log("eee aha");
   return res.send("Dc bot suno ai home page");
 });
 

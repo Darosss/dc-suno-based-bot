@@ -43,7 +43,7 @@ client.on("messageCreate", async (dcMessage) => {
   ) {
     addMultipleSongs(dcMessage, COMMANDS["add many songs"]);
   } else if (messageContentWithoutPrefix.startsWith(COMMANDS.radio.name))
-    startPlayCommand(dcMessage);
+    startPlayCommand(dcMessage, COMMANDS.radio);
   else if (messageContentWithoutPrefix.startsWith(COMMANDS.skip.name))
     skipCommand(dcMessage);
   else if (messageContentWithoutPrefix.startsWith(COMMANDS.stop.name))

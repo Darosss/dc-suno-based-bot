@@ -8,5 +8,3 @@ export const skipCommand = (message: TODO) => {
 
   return message.reply("Song skipped!");
 };
-
-module.exports = { skipCommand };

@@ -3,7 +3,7 @@ import { startPlayCommand } from "./commands/start-play";
 import { playCommand } from "./commands/play";
 import { skipCommand } from "./commands/skip";
 import { stopCommand } from "./commands/stop";
-import { COMMANDS } from "./commands/commands-list";
+import { COMMANDS, commandsListCommand } from "./commands/commands-list";
 import { addMultipleSongs } from "./commands/add-multiple-songs";
 
 const COMMANDS_PREFIX = process.env.COMMANDS_PREFIX;
@@ -38,6 +38,8 @@ client.on("messageCreate", async (dcMessage) => {
     skipCommand(dcMessage);
   else if (messageContentWithoutPrefix.startsWith(COMMANDS.stop.name))
     stopCommand(dcMessage);
+  else messageContentWithoutPrefix.startsWith(COMMANDS.commands.name);
+  commandsListCommand(dcMessage);
 });
 
 client.login(process.env.BOT_TOKEN);

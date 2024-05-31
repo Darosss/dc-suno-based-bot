@@ -6,7 +6,7 @@ import {
   VoiceConnection,
   AudioPlayer
 } from "@discordjs/voice";
-import { MUSIC_FOLDER } from "@/src/globals";
+import { MAX_IDLE_TIME_MS, MUSIC_FOLDER } from "@/src/globals";
 import { getMp3Duration, isMp3Available } from "@/utils/mp3.utils";
 import path from "path";
 import { Message, VoiceBasedChannel } from "discord.js";
@@ -21,6 +21,7 @@ class PlayerQueue {
   private connection: VoiceConnection | null;
   private audioPlayer: AudioPlayer | null;
   private currentSong: PlayerQueueItemType | null;
+  private closeConnectionTimeout: NodeJS.Timeout | null = null;
   constructor() {
     this.items = [];
     this.playTimeout = null;
@@ -81,6 +82,20 @@ class PlayerQueue {
       console.log("The bot has connected to the channel!");
     });
     this.audioPlayer = createAudioPlayer();
+
+    this.audioPlayer.addListener("stateChange", (oldOne, newOne) => {
+      if (newOne.status === "idle") {
+        this.closeConnectionTimeout = setTimeout(() => {
+          this.connection?.destroy();
+          this.connection = null;
+        }, MAX_IDLE_TIME_MS);
+      } else {
+        if (this.closeConnectionTimeout) {
+          clearTimeout(this.closeConnectionTimeout);
+          this.closeConnectionTimeout = null;
+        }
+      }
+    });
   }
 
   start(message: Message, delay = 1000) {
@@ -100,10 +115,8 @@ class PlayerQueue {
           this.start(message, 1000);
         }
         const resource = createAudioResource(songPath);
-
         if (!this.audioPlayer || !this.connection)
           return console.error("No audio player or connection :(");
-
         this.audioPlayer.play(resource);
 
         this.connection.subscribe(this.audioPlayer);

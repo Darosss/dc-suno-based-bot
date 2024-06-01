@@ -6,24 +6,35 @@ import {
   VoiceConnection,
   AudioPlayer
 } from "@discordjs/voice";
-import { MAX_IDLE_TIME_MS, MUSIC_FOLDER } from "@/src/globals";
+import {
+  MAX_IDLE_TIME_MS,
+  MUSIC_FOLDER,
+  PLAYER_STATUS_UPDATE_MS
+} from "@/src/globals";
 import { getMp3Duration, isMp3Available } from "@/utils/mp3.utils";
 import path from "path";
 import { Message, VoiceBasedChannel } from "discord.js";
-import { MessageCommandType } from "./types";
+import { CurrentSongType, PlayerQueueItemType } from "./types";
+import { client } from "./init-bot";
+import { createSongEmbed, getBotCommandsChannel } from "./utils/dc.utils";
 
-type EnqueueOptions = { resume: boolean; message: MessageCommandType };
+const BOT_STATUS_CHANNEL_ID = process.env.BOT_STATUS_CHANNEL_ID;
+type EnqueueOptions = { resume: boolean };
 
-type PlayerQueueItemType = { name: string; requester: string };
+type StatusDataType = {
+  message: Message;
+  interval: NodeJS.Timeout;
+};
 
 class PlayerQueue {
   private items: PlayerQueueItemType[];
   private playTimeout: NodeJS.Timeout | null;
   private connection: VoiceConnection | null;
   private audioPlayer: AudioPlayer | null;
-  private currentSong: PlayerQueueItemType | null;
+  private currentSong: CurrentSongType | null;
   private closeConnectionTimeout: NodeJS.Timeout | null = null;
   private repeat: boolean = false;
+  private statusData: StatusDataType | null = null;
   constructor() {
     this.items = [];
     this.playTimeout = null;
@@ -32,12 +43,12 @@ class PlayerQueue {
     this.audioPlayer = null;
   }
 
-  enqueue(item: PlayerQueueItemType, options?: EnqueueOptions) {
-    const { resume, message } = options || {};
+  async enqueue(item: PlayerQueueItemType, options?: EnqueueOptions) {
+    const { resume } = options || {};
     this.items.push(item);
     console.log(`Item ${item.name} by ${item.requester} inserted`);
-    if (resume && message && this.playTimeout === null) {
-      this.start(message);
+    if (resume && this.currentSong === null) {
+      await this.start();
     }
   }
 
@@ -89,6 +100,13 @@ class PlayerQueue {
     if (this.currentSong?.name) this.items.push(this.currentSong);
   }
 
+  private clearCloseConnectionTimeout() {
+    if (this.closeConnectionTimeout) {
+      clearTimeout(this.closeConnectionTimeout);
+      this.closeConnectionTimeout = null;
+    }
+  }
+
   async setConnection(channel: VoiceBasedChannel) {
     if (this.connection) return;
     this.connection = joinVoiceChannel({
@@ -100,82 +118,119 @@ class PlayerQueue {
       console.log("The bot has connected to the channel!");
     });
     this.audioPlayer = createAudioPlayer();
+    this.connection.subscribe(this.audioPlayer);
 
-    this.audioPlayer.addListener("stateChange", (oldOne, newOne) => {
+    this.audioPlayer.addListener("stateChange", async (oldOne, newOne) => {
       if (newOne.status === "idle") {
+        await this.start();
+
         this.closeConnectionTimeout = setTimeout(() => {
           this.connection?.destroy();
           this.connection = null;
+          this.clearStatusPlayer();
         }, MAX_IDLE_TIME_MS);
-      } else {
-        if (this.closeConnectionTimeout) {
-          clearTimeout(this.closeConnectionTimeout);
-          this.closeConnectionTimeout = null;
-        }
+      }
+      if (newOne.status === "playing") {
+        this.clearCloseConnectionTimeout();
+      } else if (newOne.status === "buffering") {
+        this.clearCloseConnectionTimeout();
       }
     });
   }
 
-  start(message: MessageCommandType, delay = 1000) {
-    if (this.isEmpty()) {
-      return message.channel?.send("Add more songs to play :)");
-    }
-    this.playTimeout ? clearInterval(this.playTimeout) : null;
+  private async updateStatusMessage() {
+    if (!this.statusData) return;
 
-    this.playTimeout = setTimeout(() => {
-      try {
-        this.currentSong = this.dequeue() || null;
-        if (!this.currentSong?.name)
-          return console.error("No current song to play");
-        const songPath = path.join(MUSIC_FOLDER, this.currentSong.name);
-        if (!isMp3Available(songPath)) {
-          console.log("No file found, skip");
-          this.start(message, 1000);
-        }
-        const resource = createAudioResource(songPath);
-        if (!this.audioPlayer || !this.connection)
-          return console.error("No audio player or connection :(");
-        this.audioPlayer.play(resource);
+    await this.statusData.message.edit({
+      embeds: [createSongEmbed(this.currentSong)]
+    });
+  }
+  private async executeStatusPlayer() {
+    if (this.statusData) return;
+    const statusChannel = client.channels.cache.get(
+      process.env.BOT_STATUS_CHANNEL_ID
+    );
+    if (!statusChannel || !statusChannel.isTextBased())
+      return console.log("Status channel does not exist");
 
-        this.connection.subscribe(this.audioPlayer);
-        getMp3Duration(songPath)
-          .then((duration) => {
-            message.channel?.send(
-              `------
-              Now playing: \`${this.currentSong!.name}\`  
-              ${
-                this.peek()
-                  ? `Next(in ${Math.floor(duration)} sec)  \`${this.peek()?.name} \``
-                  : ""
-              }`
-            );
+    const statusMessageInst = await statusChannel.send({
+      embeds: [createSongEmbed(this.currentSong)]
+    });
 
-            this.start(message, duration * 1000);
-          })
-          .catch((err) => {
-            console.error("Error:", err);
-          });
-      } catch (error) {
-        console.error(error);
-        message.channel?.send("Failed to play the file.");
+    this.statusData = {
+      message: statusMessageInst,
+      interval: setInterval(() => {
+        statusMessageInst.edit({
+          embeds: [createSongEmbed(this.currentSong, this.peek())]
+        });
+      }, PLAYER_STATUS_UPDATE_MS)
+    };
+  }
+
+  clearStatusPlayer() {
+    if (!this.statusData) return;
+    clearInterval(this.statusData.interval);
+    this.statusData = null;
+  }
+
+  async start(): Promise<void> {
+    await this.executeStatusPlayer();
+
+    this.clearPlayTimeout();
+
+    try {
+      const firstSong = this.dequeue();
+      if (!firstSong || !firstSong.name)
+        //Needed to add !firstSong.name -> in case sth went wrong
+        return console.error("No current song to play");
+      const songPath = path.join(MUSIC_FOLDER, firstSong.name);
+
+      if (!isMp3Available(songPath)) {
+        console.log("No file found, skip");
+        return await this.start();
       }
-    }, delay);
+      const resource = createAudioResource(songPath);
+
+      if (!this.audioPlayer || !this.connection)
+        return console.error("No audio player or connection :(");
+      this.audioPlayer.play(resource);
+
+      try {
+        const duration = await getMp3Duration(songPath);
+        this.currentSong = {
+          ...firstSong,
+          duration: 0,
+          resource
+        };
+        this.currentSong!.duration = duration * 1000;
+        getBotCommandsChannel()?.send(
+          `All good. Check <#${BOT_STATUS_CHANNEL_ID}> channel for player status`
+        );
+        this.updateStatusMessage();
+      } catch (err) {
+        console.error("Error:", err);
+      }
+    } catch (error) {
+      console.error(error);
+      getBotCommandsChannel()?.send("Failed to play the file.");
+    }
   }
 
   stop() {
     this.clearPlayTimeout();
     this.audioPlayer?.stop();
     this.items = [];
+    this.clearStatusPlayer();
   }
 
-  skip(message: Message) {
+  skip() {
     this.audioPlayer?.stop();
 
     if (this.isEmpty()) {
       this.clearPlayTimeout();
       return false;
     } else {
-      this.start(message);
+      this.start();
       return true;
     }
   }

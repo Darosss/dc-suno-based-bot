@@ -8,6 +8,7 @@ import {
   UserContextMenuCommandInteraction
 } from "discord.js";
 import { CommandsType } from "./commands/commands-list";
+import { AudioResource } from "@discordjs/voice";
 
 export type TODO = any;
 
@@ -37,3 +38,13 @@ export type MessageInteractionTypes =
   | UserContextMenuCommandInteraction;
 
 export type MessageCommandType = Message | MessageInteractionTypes;
+
+export type PlayerQueueItemType = {
+  name: string;
+  requester: string;
+};
+
+export type CurrentSongType = PlayerQueueItemType & {
+  duration: number;
+  resource: Pick<AudioResource, "playbackDuration">;
+};

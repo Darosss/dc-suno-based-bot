@@ -77,7 +77,7 @@ const playCommandLogic = async (
     PlayerQueue.setConnection(channel).then(() => {
       PlayerQueue.enqueue(
         { name: songToPlayName, requester: messageMemberGuildMember.id },
-        { resume: true, message }
+        { resume: true }
       );
     });
     return `Added ${songToPlayName}`;

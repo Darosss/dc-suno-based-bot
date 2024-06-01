@@ -6,6 +6,7 @@ import { loadTextCommands } from "./load-text-commands";
 import { canUserUseCommands } from "./utils/dc.utils";
 
 const COMMANDS_PREFIX = process.env.COMMANDS_PREFIX;
+const BOT_COMMAND_CHANNEL_ID = process.env.BOT_COMMANDS_CHANNEL_ID;
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -62,6 +63,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 });
 
 client.on(Events.MessageCreate, async (dcMessage) => {
+  if (dcMessage.channelId !== BOT_COMMAND_CHANNEL_ID) return;
   if (!dcMessage.content.startsWith(COMMANDS_PREFIX)) return;
 
   const messageContentWithoutPrefix = dcMessage.content.slice(

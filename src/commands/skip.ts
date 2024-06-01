@@ -10,7 +10,7 @@ const skipCommand = (message: Message) => {
     return message.reply("You can skip only yours songs");
   }
 
-  const skipped = PlayerQueue.skip(message);
+  const skipped = PlayerQueue.skip();
 
   return skipped ? message.reply("Song skipped!") : null;
 };

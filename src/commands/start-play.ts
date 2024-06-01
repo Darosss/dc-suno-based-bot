@@ -69,7 +69,7 @@ const startPlayCommandLogic = (
   }
 
   PlayerQueue.setConnection(channel).then(() => {
-    PlayerQueue.start(message);
+    PlayerQueue.start();
   });
 
   return `Loaded ${maxSongs} songs`;

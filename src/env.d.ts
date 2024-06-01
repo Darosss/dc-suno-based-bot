@@ -7,6 +7,8 @@ declare global {
       COMMANDS_PREFIX: string;
       OWNER_ID: string;
       SERVER_PORT: string;
+      BOT_COMMANDS_CHANNEL_ID: string;
+      BOT_STATUS_CHANNEL_ID: string;
     }
   }
 }

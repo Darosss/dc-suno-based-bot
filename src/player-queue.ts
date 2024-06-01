@@ -106,18 +106,13 @@ class PlayerQueue {
 
     this.audioPlayer.addListener("stateChange", async (oldOne, newOne) => {
       if (newOne.status === "idle") {
-        await this.start();
+        this.start();
 
         this.closeConnectionTimeout = setTimeout(() => {
           this.connection?.destroy();
           this.connection = null;
           this.clearStatusPlayer();
         }, MAX_IDLE_TIME_MS);
-      }
-      if (newOne.status === "playing") {
-        this.clearCloseConnectionTimeout();
-      } else if (newOne.status === "buffering") {
-        this.clearCloseConnectionTimeout();
       }
     });
   }
@@ -138,6 +133,8 @@ class PlayerQueue {
         console.log("No file found, skip");
         return await this.start();
       }
+      this.clearCloseConnectionTimeout();
+
       const resource = createAudioResource(songPath);
 
       if (!this.audioPlayer || !this.connection)

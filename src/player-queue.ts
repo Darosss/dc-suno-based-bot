@@ -60,6 +60,10 @@ class PlayerQueue {
     return this.items.at(0);
   }
 
+  shuffle() {
+    this.items = this.items.sort(() => 0.5 - Math.random());
+  }
+
   isEmpty() {
     return this.items.length == 0;
   }

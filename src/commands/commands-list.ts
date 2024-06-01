@@ -8,7 +8,8 @@ export type COMMANDS_NAMES =
   | "radio"
   | "add many songs"
   | "commands"
-  | "songs";
+  | "songs"
+  | "shuffle";
 
 export type CommandsType = {
   name: string /**alias: string[] */;
@@ -34,6 +35,10 @@ export const COMMANDS: Record<COMMANDS_NAMES, CommandsType> = {
   songs: {
     name: "songs",
     description: "I will send you a DM message with possible files in .txt"
+  },
+  shuffle: {
+    name: "shuffle",
+    description: "Shuffle current player songs"
   }
 };
 

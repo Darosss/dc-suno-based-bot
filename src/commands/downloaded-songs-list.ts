@@ -1,14 +1,38 @@
-import { AttachmentBuilder, Message } from "discord.js";
+import { AttachmentBuilder, SlashCommandBuilder } from "discord.js";
 import { getMp3FromMusicFolder, saveMp3ListToFile } from "@/utils/mp3.utils";
+import { COMMANDS } from "./commands-list";
+import { isDcMessage } from "@/utils/dc.utils";
+import { MessageCommandType } from "@/src/types";
 
-export const downloadedSongsListCommand = async (message: Message) => {
-  await sendPossibleFilesAsPrivMessage(message);
+const COMMAND_DATA = COMMANDS.songs;
+
+const downloadedSongsListCommand = async (message: MessageCommandType) => {
+  const mp3AttachmentTxt = await sendPossibleFilesAsPrivMessage();
+
+  if (!isDcMessage(message)) {
+    await message.user.send({ files: [mp3AttachmentTxt] });
+  } else {
+    await message.author.send({ files: [mp3AttachmentTxt] });
+  }
+
+  return await message.reply("Check priv message from me");
 };
 
-const sendPossibleFilesAsPrivMessage = async (message: Message) => {
+const sendPossibleFilesAsPrivMessage = async () => {
   const files = getMp3FromMusicFolder();
-  saveMp3ListToFile(files).then(async (mp3NamesTxt) => {
-    const attachment = new AttachmentBuilder(mp3NamesTxt);
-    await message.author.send({ files: [attachment] });
-  });
+  const mp3NamesTxt = await saveMp3ListToFile(files);
+  const attachment = new AttachmentBuilder(mp3NamesTxt);
+
+  return attachment;
+};
+
+const data = new SlashCommandBuilder()
+  .setName(COMMAND_DATA.name)
+  .setDescription(COMMAND_DATA.description);
+
+export {
+  data,
+  downloadedSongsListCommand as execute,
+  COMMAND_DATA as command,
+  downloadedSongsListCommand as executeAsText
 };

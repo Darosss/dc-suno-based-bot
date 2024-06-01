@@ -1,6 +1,6 @@
 import { CommandsType } from "@/src/commands/commands-list";
 import { client } from "../init-bot";
-import { ChannelType, Message } from "discord.js";
+import { ChannelType, Interaction, Message } from "discord.js";
 
 export const removeCommandNameFromMessage = (
   message: string,
@@ -25,4 +25,8 @@ export const canUserUseCommands = (message: Message) => {
 
   if (!canUse) message.reply("You are not in the same voice channel as me");
   return canUse;
+};
+
+export const isDcMessage = (pet: Message | Interaction): pet is Message => {
+  return (pet as Message).author !== undefined;
 };

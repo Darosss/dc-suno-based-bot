@@ -1,4 +1,5 @@
-import { Message } from "discord.js";
+import { SlashCommandBuilder } from "discord.js";
+import { MessageCommandType } from "../types";
 
 export type COMMANDS_NAMES =
   | "play"
@@ -13,6 +14,7 @@ export type CommandsType = {
   name: string /**alias: string[] */;
   description: string;
 };
+
 export const COMMANDS: Record<COMMANDS_NAMES, CommandsType> = {
   play: {
     name: "play",
@@ -35,12 +37,26 @@ export const COMMANDS: Record<COMMANDS_NAMES, CommandsType> = {
   }
 };
 
-export const commandsListCommand = (message: Message) => {
+const COMMAND_DATA = COMMANDS.commands;
+
+const commandsListCommand = (message: MessageCommandType) => {
   const commandsListMsg = Object.values(COMMANDS).map(
     (command) =>
       `\`${process.env.COMMANDS_PREFIX}${command.name}\` - ${command.description}`
   );
-  return message.reply(
-    `Possible commands are:\n ${commandsListMsg.join("\n")}`
-  );
+
+  const messageToSend = `Possible commands are:\n ${commandsListMsg.join("\n")}`;
+
+  message.reply(messageToSend);
+};
+
+const data = new SlashCommandBuilder()
+  .setName(COMMAND_DATA.name)
+  .setDescription(COMMAND_DATA.description);
+
+export {
+  data,
+  COMMAND_DATA as command,
+  commandsListCommand as execute,
+  commandsListCommand as executeAsText
 };

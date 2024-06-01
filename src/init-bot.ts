@@ -1,12 +1,9 @@
-import { ActivityType, Client, GatewayIntentBits } from "discord.js";
-import { startPlayCommand } from "./commands/start-play";
-import { playCommand } from "./commands/play";
-import { skipCommand } from "./commands/skip";
-import { stopCommand } from "./commands/stop";
-import { COMMANDS, commandsListCommand } from "./commands/commands-list";
-import { addMultipleSongs } from "./commands/add-multiple-songs";
+import { ActivityType, Client, Events, GatewayIntentBits } from "discord.js";
+import { COMMANDS } from "./commands/commands-list";
+import { loadSlashCommands } from "./load-slash-commands";
+import { ClientWithCommands } from "./types";
+import { loadTextCommands } from "./load-text-commands";
 import { canUserUseCommands } from "./utils/dc.utils";
-import { downloadedSongsListCommand } from "./commands/downloaded-songs-list";
 
 const COMMANDS_PREFIX = process.env.COMMANDS_PREFIX;
 const client = new Client({
@@ -17,9 +14,12 @@ const client = new Client({
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildVoiceStates
   ]
-});
+}) as ClientWithCommands;
 client.once("ready", () => {
   console.log(`Logged in as ${client.user?.tag}`);
+
+  loadSlashCommands(client);
+  loadTextCommands(client);
 
   client.user?.setPresence({
     activities: [
@@ -31,42 +31,59 @@ client.once("ready", () => {
     ]
   });
 });
-client.on("messageCreate", async (dcMessage) => {
+client.on(Events.InteractionCreate, async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+
+  const command = (interaction.client as ClientWithCommands).commands.get(
+    interaction.commandName
+  );
+
+  if (!command) {
+    console.error(`No command matching ${interaction.commandName} was found.`);
+    return;
+  }
+
+  try {
+    await command.execute(interaction);
+  } catch (error) {
+    console.error(error);
+    if (interaction.replied || interaction.deferred) {
+      await interaction.followUp({
+        content: "There was an error while executing this command!",
+        ephemeral: true
+      });
+    } else {
+      await interaction.reply({
+        content: "There was an error while executing this command!",
+        ephemeral: true
+      });
+    }
+  }
+});
+
+client.on(Events.MessageCreate, async (dcMessage) => {
   if (!dcMessage.content.startsWith(COMMANDS_PREFIX)) return;
 
   const messageContentWithoutPrefix = dcMessage.content.slice(
     COMMANDS_PREFIX.length
   );
 
-  if (
-    messageContentWithoutPrefix.startsWith(COMMANDS.play.name) &&
-    canUserUseCommands(dcMessage)
-  ) {
-    playCommand(dcMessage, COMMANDS.play);
-  } else if (
-    messageContentWithoutPrefix.startsWith(COMMANDS["add many songs"].name) &&
-    canUserUseCommands(dcMessage)
-  ) {
-    addMultipleSongs(dcMessage, COMMANDS["add many songs"]);
-  } else if (
-    messageContentWithoutPrefix.startsWith(COMMANDS.radio.name) &&
-    canUserUseCommands(dcMessage)
-  )
-    startPlayCommand(dcMessage, COMMANDS.radio);
-  else if (
-    messageContentWithoutPrefix.startsWith(COMMANDS.skip.name) &&
-    canUserUseCommands(dcMessage)
-  )
-    skipCommand(dcMessage);
-  else if (
-    messageContentWithoutPrefix.startsWith(COMMANDS.stop.name) &&
-    canUserUseCommands(dcMessage)
-  )
-    stopCommand(dcMessage);
-  else if (messageContentWithoutPrefix.startsWith(COMMANDS.commands.name)) {
-    commandsListCommand(dcMessage);
-  } else if (messageContentWithoutPrefix.startsWith(COMMANDS.songs.name)) {
-    downloadedSongsListCommand(dcMessage);
+  const arrayOfTxtCommandsKeys = [...client.textCommands.keys()];
+  for (let index = 0; index < arrayOfTxtCommandsKeys.length; index++) {
+    const currentKey = arrayOfTxtCommandsKeys.at(index);
+    if (!currentKey) continue;
+
+    if (messageContentWithoutPrefix.startsWith(currentKey)) {
+      const txtCommandData = client.textCommands.get(currentKey)!;
+
+      if (
+        txtCommandData.needsToBeInSameVoiceChannel &&
+        !canUserUseCommands(dcMessage)
+      )
+        return;
+
+      await txtCommandData.execute(dcMessage);
+    }
   }
 });
 

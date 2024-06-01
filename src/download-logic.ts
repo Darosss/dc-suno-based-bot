@@ -3,7 +3,7 @@ import fs from "fs";
 import https from "https";
 import { MUSIC_FOLDER } from "./globals";
 type SongData = {
-  fileNameTitle: string;
+  fileNameTitle?: string;
   songId: string;
 };
 
@@ -43,7 +43,9 @@ export const downloadMP3 = async (
           if (foundTitleSplitted.length <= 1 && foundTitleSplitted.at(0))
             return resolve({ message: "Song isn't found" });
 
-          songData.fileNameTitle = foundTitleSplitted.at(0)!.trim();
+          songData.fileNameTitle = foundTitleSplitted.at(0)?.trim();
+          if (!songData.songId || !songData.fileNameTitle)
+            return resolve({ message: "Song id or file name is wrong" });
           try {
             const { message, fileName } = await getMp3AndDownload(
               songData,

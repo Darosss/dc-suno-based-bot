@@ -1,66 +1,120 @@
 import { downloadMP3 } from "@/src/download-logic";
-import { CommandsType } from "./commands-list";
+import { COMMANDS } from "./commands-list";
 import PlayerQueue from "@/src/player-queue";
 import { getMp3FromMusicFolder } from "@/utils/mp3.utils";
 import { MUSIC_FOLDER } from "@/src/globals";
 import { removeCommandNameFromMessage } from "@/utils/dc.utils";
-import { Message } from "discord.js";
+import { GuildMember, Message, SlashCommandBuilder } from "discord.js";
+import { MessageCommandType, MessageInteractionTypes } from "../types";
 
-const baseWrongMessageReply = (commandName: string) =>
-  `Give me correct command - example: ${process.env.COMMANDS_PREFIX}${commandName} https://suno.com/song/04db00ab-f7d7-40f8-a584-124b096beb31`;
+type FindByNameReturnType = {
+  message: string;
+  fileName?: string;
+};
 
-export const playCommand = async (
-  message: Message,
-  commandData: CommandsType
-) => {
+const COMMAND_DATA = COMMANDS.play;
+const SLASH_COMMAND_OPTION_SONG_ULR_NAME = "song-url-or-name";
+const baseWrongMessageReply = `Give me correct command - example: ${process.env.COMMANDS_PREFIX}${COMMAND_DATA.name} https://suno.com/song/04db00ab-f7d7-40f8-a584-124b096beb31`;
+
+const playCommand = async (message: Message) => {
   const songUrlOrName = removeCommandNameFromMessage(
     message.content,
-    commandData
+    COMMAND_DATA
   );
-  let songToPlayName = "";
 
+  const messageToSend = await playCommandLogic(songUrlOrName, message);
+
+  return await message.reply(messageToSend);
+};
+
+const slashPlayCommand = async (message: MessageInteractionTypes) => {
+  const songUrlOrName = message.options.get(
+    SLASH_COMMAND_OPTION_SONG_ULR_NAME
+  )?.value;
   if (!songUrlOrName)
-    return message.reply("Add either the URL or the name of the song.");
-  else if (!songUrlOrName.includes("https://suno.com/song/"))
-    songToPlayName = findByName(message, songUrlOrName) || "";
-  else {
+    return await message.reply("No songs url / name provided :(");
+
+  await message.reply("Trying to add your songs");
+
+  const returnMessage = await playCommandLogic(
+    songUrlOrName as string,
+    message
+  );
+  return await message.editReply(returnMessage);
+};
+
+const playCommandLogic = async (
+  songUrlOrName: string,
+  message: MessageCommandType
+): Promise<string> => {
+  let songToPlayName = "";
+  if (!songUrlOrName) return "Add either the URL or the name of the song.";
+  else if (!songUrlOrName.includes("https://suno.com/song/")) {
+    const findByNameData = findByName(songUrlOrName);
+    if (!findByNameData.fileName) return findByNameData.message;
+
+    songToPlayName = findByNameData.fileName;
+  } else {
     const songId = songUrlOrName.split("/").at(-1);
 
     if (!songId) {
-      return message.reply(baseWrongMessageReply(commandData.name));
+      return baseWrongMessageReply;
     }
 
     const { message: downloadMessage, fileName } = await downloadMP3(
       songUrlOrName,
       MUSIC_FOLDER
     );
-    if (!fileName) return message.reply(downloadMessage);
+    if (!fileName) return downloadMessage;
     songToPlayName = fileName;
   }
-
-  const channel = message.member?.voice.channel;
+  const messageMemberGuildMember = message.member as GuildMember;
+  const channel = messageMemberGuildMember?.voice.channel;
   if (!channel) {
-    return message.reply("You need to join a voice channel first!");
+    return "You need to join a voice channel first!";
   }
-
-  PlayerQueue.setConnection(channel).then(() => {
-    PlayerQueue.enqueue(
-      { name: songToPlayName, requester: message.author.id },
-      { resume: true, message }
-    );
-  });
-  if (songToPlayName) return message.reply(`Added ${songToPlayName}`);
+  if (songToPlayName) {
+    PlayerQueue.setConnection(channel).then(() => {
+      PlayerQueue.enqueue(
+        { name: songToPlayName, requester: messageMemberGuildMember.id },
+        { resume: true, message }
+      );
+    });
+    return `Added ${songToPlayName}`;
+  } else {
+    return "Something wen't wrong ";
+  }
 };
 
-const findByName = (message: Message, songName: string): string | null => {
+const findByName = (songName: string): FindByNameReturnType => {
   const files = getMp3FromMusicFolder();
-  const foundName = files.find((name) => {
-    return name.toLowerCase().includes(songName.trim().toLowerCase());
-  });
+  const foundName = files.find((name) =>
+    name.toLowerCase().includes(songName.trim().toLowerCase())
+  );
   if (!foundName) {
-    message.reply("No song with your search");
-    return null;
+    return {
+      message: "No song with your search"
+    };
   }
 
-  return foundName;
+  return { fileName: foundName, message: "Found song" };
+};
+
+const data = new SlashCommandBuilder()
+  .setName(COMMAND_DATA.name)
+  .addStringOption((option) =>
+    option
+      .setName(SLASH_COMMAND_OPTION_SONG_ULR_NAME)
+      .setDescription("Provide songs url/name")
+  )
+  .setDescription(COMMAND_DATA.description);
+
+const needsToBeInSameVoiceChannel = true;
+
+export {
+  data,
+  slashPlayCommand as execute,
+  COMMAND_DATA as command,
+  playCommand as executeAsText,
+  needsToBeInSameVoiceChannel
 };

@@ -10,8 +10,9 @@ import { MAX_IDLE_TIME_MS, MUSIC_FOLDER } from "@/src/globals";
 import { getMp3Duration, isMp3Available } from "@/utils/mp3.utils";
 import path from "path";
 import { Message, VoiceBasedChannel } from "discord.js";
+import { MessageCommandType } from "./types";
 
-type EnqueueOptions = { resume: boolean; message: Message };
+type EnqueueOptions = { resume: boolean; message: MessageCommandType };
 
 type PlayerQueueItemType = { name: string; requester: string };
 
@@ -98,9 +99,9 @@ class PlayerQueue {
     });
   }
 
-  start(message: Message, delay = 1000) {
+  start(message: MessageCommandType, delay = 1000) {
     if (this.isEmpty()) {
-      return message.reply("Add more songs to play :)");
+      return message.channel?.send("Add more songs to play :)");
     }
     this.playTimeout ? clearInterval(this.playTimeout) : null;
 
@@ -122,7 +123,7 @@ class PlayerQueue {
         this.connection.subscribe(this.audioPlayer);
         getMp3Duration(songPath)
           .then((duration) => {
-            message.reply(
+            message.channel?.send(
               `------
               Now playing: \`${this.currentSong!.name}\`  
               ${
@@ -139,7 +140,7 @@ class PlayerQueue {
           });
       } catch (error) {
         console.error(error);
-        message.reply("Failed to play the file.");
+        message.channel?.send("Failed to play the file.");
       }
     }, delay);
   }

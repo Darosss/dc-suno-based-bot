@@ -31,7 +31,6 @@ export const saveMp3ListToFile = async (
   mp3FilesNames: string[]
 ): Promise<string> => {
   const tempFilePath = path.join(MUSIC_FOLDER, "mp3list.txt");
-  console.log(tempFilePath);
   const fileContent = mp3FilesNames.join("\n");
   await fsAsync.writeFile(tempFilePath, fileContent);
   return tempFilePath;

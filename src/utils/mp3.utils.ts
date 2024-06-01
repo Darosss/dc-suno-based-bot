@@ -1,6 +1,8 @@
 import fs from "fs";
+import fsAsync from "fs/promises";
 import mp3Duration from "mp3-duration";
 import { MUSIC_FOLDER } from "@/src/globals";
+import path from "path";
 
 export const getMp3Duration = async (mp3FilePath: string): Promise<number> => {
   return new Promise((resolve, reject) => {
@@ -23,4 +25,14 @@ export const isMp3Available = async (filePath: string) => {
   } catch (err) {
     return false;
   }
+};
+
+export const saveMp3ListToFile = async (
+  mp3FilesNames: string[]
+): Promise<string> => {
+  const tempFilePath = path.join(MUSIC_FOLDER, "mp3list.txt");
+  console.log(tempFilePath);
+  const fileContent = mp3FilesNames.join("\n");
+  await fsAsync.writeFile(tempFilePath, fileContent);
+  return tempFilePath;
 };

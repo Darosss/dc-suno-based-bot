@@ -6,6 +6,7 @@ import { stopCommand } from "./commands/stop";
 import { COMMANDS, commandsListCommand } from "./commands/commands-list";
 import { addMultipleSongs } from "./commands/add-multiple-songs";
 import { canUserUseCommands } from "./utils/dc.utils";
+import { downloadedSongsListCommand } from "./commands/downloaded-songs-list";
 
 const COMMANDS_PREFIX = process.env.COMMANDS_PREFIX;
 const client = new Client({
@@ -64,6 +65,8 @@ client.on("messageCreate", async (dcMessage) => {
     stopCommand(dcMessage);
   else if (messageContentWithoutPrefix.startsWith(COMMANDS.commands.name)) {
     commandsListCommand(dcMessage);
+  } else if (messageContentWithoutPrefix.startsWith(COMMANDS.songs.name)) {
+    downloadedSongsListCommand(dcMessage);
   }
 });
 

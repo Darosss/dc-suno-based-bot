@@ -6,7 +6,8 @@ export type COMMANDS_NAMES =
   | "stop"
   | "radio"
   | "add many songs"
-  | "commands";
+  | "commands"
+  | "songs";
 
 export type CommandsType = {
   name: string /**alias: string[] */;
@@ -27,6 +28,10 @@ export const COMMANDS: Record<COMMANDS_NAMES, CommandsType> = {
   commands: {
     name: "commands",
     description: "Get commands list"
+  },
+  songs: {
+    name: "songs",
+    description: "I will send you a DM message with possible files in .txt"
   }
 };
 

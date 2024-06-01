@@ -3,7 +3,7 @@ import { CommandsType } from "./commands-list";
 import PlayerQueue from "@/src/player-queue";
 import { getMp3FromMusicFolder } from "@/utils/mp3.utils";
 import { MUSIC_FOLDER } from "@/src/globals";
-import { removeCommandNameFromMessage } from "../utils/dc.utils";
+import { removeCommandNameFromMessage } from "@/utils/dc.utils";
 import { Message } from "discord.js";
 
 const baseWrongMessageReply = (commandName: string) =>
@@ -18,7 +18,10 @@ export const playCommand = async (
     commandData
   );
   let songToPlayName = "";
-  if (!message.content.includes("https://suno.com/song/"))
+
+  if (!songUrlOrName)
+    return message.reply("Add either the URL or the name of the song.");
+  else if (!songUrlOrName.includes("https://suno.com/song/"))
     songToPlayName = findByName(message, songUrlOrName) || "";
   else {
     const songId = songUrlOrName.split("/").at(-1);

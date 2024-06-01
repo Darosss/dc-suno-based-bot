@@ -9,7 +9,8 @@ export type COMMANDS_NAMES =
   | "add many songs"
   | "commands"
   | "songs"
-  | "shuffle";
+  | "shuffle"
+  | "repeat";
 
 export type CommandsType = {
   name: string /**alias: string[] */;
@@ -39,6 +40,10 @@ export const COMMANDS: Record<COMMANDS_NAMES, CommandsType> = {
   shuffle: {
     name: "shuffle",
     description: "Shuffle current player songs"
+  },
+  repeat: {
+    name: "repeat",
+    description: "Turn on/off repeat songs"
   }
 };
 

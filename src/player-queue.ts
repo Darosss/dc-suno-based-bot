@@ -23,6 +23,7 @@ class PlayerQueue {
   private audioPlayer: AudioPlayer | null;
   private currentSong: PlayerQueueItemType | null;
   private closeConnectionTimeout: NodeJS.Timeout | null = null;
+  private repeat: boolean = false;
   constructor() {
     this.items = [];
     this.playTimeout = null;
@@ -50,7 +51,10 @@ class PlayerQueue {
       console.log("No items in queue");
       return null;
     }
-    return this.items.shift();
+    const firstItem = this.items.shift();
+
+    if (this.repeat && firstItem) this.items.push(firstItem);
+    return firstItem;
   }
 
   peek() {
@@ -74,6 +78,15 @@ class PlayerQueue {
 
   getCurrentSong() {
     return this.currentSong;
+  }
+
+  getRepeat() {
+    return this.repeat;
+  }
+
+  setRepeat(enabled: boolean) {
+    this.repeat = enabled;
+    if (this.currentSong?.name) this.items.push(this.currentSong);
   }
 
   async setConnection(channel: VoiceBasedChannel) {

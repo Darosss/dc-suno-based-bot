@@ -28,22 +28,18 @@ type StatusDataType = {
 
 class PlayerQueue {
   private items: PlayerQueueItemType[];
-  private playTimeout: NodeJS.Timeout | null;
-  private connection: VoiceConnection | null;
-  private audioPlayer: AudioPlayer | null;
-  private currentSong: CurrentSongType | null;
+  private playTimeout: NodeJS.Timeout | null = null;
+  private connection: VoiceConnection | null = null;
+  private audioPlayer: AudioPlayer | null = null;
+  private currentSong: CurrentSongType | null = null;
   private closeConnectionTimeout: NodeJS.Timeout | null = null;
   private repeat: boolean = false;
   private statusData: StatusDataType | null = null;
   constructor() {
     this.items = [];
-    this.playTimeout = null;
-    this.connection = null;
-    this.currentSong = null;
-    this.audioPlayer = null;
   }
 
-  async enqueue(item: PlayerQueueItemType, options?: EnqueueOptions) {
+  public async enqueue(item: PlayerQueueItemType, options?: EnqueueOptions) {
     const { resume } = options || {};
     this.items.push(item);
     console.log(`Item ${item.name} by ${item.requester} inserted`);
@@ -52,12 +48,7 @@ class PlayerQueue {
     }
   }
 
-  clearPlayTimeout() {
-    this.playTimeout ? clearTimeout(this.playTimeout) : null;
-    this.playTimeout = null;
-  }
-
-  dequeue() {
+  public dequeue() {
     if (this.isEmpty()) {
       console.log("No items in queue");
       return null;
@@ -68,46 +59,39 @@ class PlayerQueue {
     return firstItem;
   }
 
-  peek() {
+  public peek() {
     if (this.isEmpty()) {
       return console.log("No items in queue");
     }
     return this.items.at(0);
   }
 
-  shuffle() {
+  public shuffle() {
     this.items = this.items.sort(() => 0.5 - Math.random());
   }
 
-  isEmpty() {
+  public isEmpty() {
     return this.items.length == 0;
   }
 
-  printQueue() {
+  public printQueue() {
     console.log(this.items.join(", "));
   }
 
-  getCurrentSong() {
+  public getCurrentSong() {
     return this.currentSong;
   }
 
-  getRepeat() {
+  public getRepeat() {
     return this.repeat;
   }
 
-  setRepeat(enabled: boolean) {
+  public setRepeat(enabled: boolean) {
     this.repeat = enabled;
     if (this.currentSong?.name) this.items.push(this.currentSong);
   }
 
-  private clearCloseConnectionTimeout() {
-    if (this.closeConnectionTimeout) {
-      clearTimeout(this.closeConnectionTimeout);
-      this.closeConnectionTimeout = null;
-    }
-  }
-
-  async setConnection(channel: VoiceBasedChannel) {
+  public async setConnection(channel: VoiceBasedChannel) {
     if (this.connection) return;
     this.connection = joinVoiceChannel({
       channelId: channel.id,
@@ -136,41 +120,6 @@ class PlayerQueue {
         this.clearCloseConnectionTimeout();
       }
     });
-  }
-
-  private async updateStatusMessage() {
-    if (!this.statusData) return;
-
-    await this.statusData.message.edit({
-      embeds: [createSongEmbed(this.currentSong)]
-    });
-  }
-  private async executeStatusPlayer() {
-    if (this.statusData) return;
-    const statusChannel = client.channels.cache.get(
-      process.env.BOT_STATUS_CHANNEL_ID
-    );
-    if (!statusChannel || !statusChannel.isTextBased())
-      return console.log("Status channel does not exist");
-
-    const statusMessageInst = await statusChannel.send({
-      embeds: [createSongEmbed(this.currentSong)]
-    });
-
-    this.statusData = {
-      message: statusMessageInst,
-      interval: setInterval(() => {
-        statusMessageInst.edit({
-          embeds: [createSongEmbed(this.currentSong, this.peek())]
-        });
-      }, PLAYER_STATUS_UPDATE_MS)
-    };
-  }
-
-  clearStatusPlayer() {
-    if (!this.statusData) return;
-    clearInterval(this.statusData.interval);
-    this.statusData = null;
   }
 
   async start(): Promise<void> {
@@ -216,14 +165,14 @@ class PlayerQueue {
     }
   }
 
-  stop() {
+  public stop() {
     this.clearPlayTimeout();
     this.audioPlayer?.stop();
     this.items = [];
     this.clearStatusPlayer();
   }
 
-  skip() {
+  public skip() {
     this.audioPlayer?.stop();
 
     if (this.isEmpty()) {
@@ -233,6 +182,53 @@ class PlayerQueue {
       this.start();
       return true;
     }
+  }
+
+  private clearCloseConnectionTimeout() {
+    if (this.closeConnectionTimeout) {
+      clearTimeout(this.closeConnectionTimeout);
+      this.closeConnectionTimeout = null;
+    }
+  }
+  private async updateStatusMessage() {
+    if (!this.statusData) return;
+
+    await this.statusData.message.edit({
+      embeds: [createSongEmbed(this.currentSong)]
+    });
+  }
+
+  private async executeStatusPlayer() {
+    if (this.statusData) return;
+    const statusChannel = client.channels.cache.get(
+      process.env.BOT_STATUS_CHANNEL_ID
+    );
+    if (!statusChannel || !statusChannel.isTextBased())
+      return console.log("Status channel does not exist");
+
+    const statusMessageInst = await statusChannel.send({
+      embeds: [createSongEmbed(this.currentSong)]
+    });
+
+    this.statusData = {
+      message: statusMessageInst,
+      interval: setInterval(() => {
+        statusMessageInst.edit({
+          embeds: [createSongEmbed(this.currentSong, this.peek())]
+        });
+      }, PLAYER_STATUS_UPDATE_MS)
+    };
+  }
+
+  private clearStatusPlayer() {
+    if (!this.statusData) return;
+    clearInterval(this.statusData.interval);
+    this.statusData = null;
+  }
+
+  private clearPlayTimeout() {
+    this.playTimeout ? clearTimeout(this.playTimeout) : null;
+    this.playTimeout = null;
   }
 }
 

@@ -1,7 +1,17 @@
 import { CommandsType } from "@/src/commands/commands-list";
 import { client } from "../init-bot";
-import { ChannelType, EmbedBuilder, Interaction, Message } from "discord.js";
-import { CurrentSongType, PlayerQueueItemType } from "../types";
+import {
+  ChannelType,
+  EmbedBuilder,
+  GuildMember,
+  Interaction,
+  Message
+} from "discord.js";
+import {
+  CurrentSongType,
+  MessageCommandType,
+  PlayerQueueItemType
+} from "../types";
 
 export const removeCommandNameFromMessage = (
   message: string,
@@ -11,15 +21,16 @@ export const removeCommandNameFromMessage = (
     .slice(process.env.COMMANDS_PREFIX.length + command.name.length)
     .trim();
 
-export const canUserUseCommands = (message: Message) => {
+export const canUserUseCommands = (message: MessageCommandType) => {
   if (client.voice.adapters.size === 0) return true;
 
   const canUse = message.guild?.channels.cache.some((channel) => {
     if (!client.user || !message.member) return;
+    const messageMemberGuild = message.member as GuildMember;
     if (
       channel.type === ChannelType.GuildVoice &&
       channel.members.has(client.user.id) &&
-      channel.members.has(message.member.id)
+      channel.members.has(messageMemberGuild.id)
     )
       return true;
   });

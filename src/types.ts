@@ -14,19 +14,25 @@ export type TODO = any;
 
 type CommandExecuteAsText = (message: Message) => unknown;
 
+type SlashCommandExecute = (message: MessageInteractionTypes) => unknown;
+
 type ClientTextCommandCollectionData = {
   execute: CommandExecuteAsText;
   needsToBeInSameVoiceChannel?: boolean;
 };
+type ClientSlashCommandCollectionData = {
+  execute: SlashCommandExecute;
+  needsToBeInSameVoiceChannel?: boolean;
+};
 
 export type ClientWithCommands = Client & {
-  commands: Collection<string, any>;
+  commands: Collection<string, ClientSlashCommandCollectionData>;
   textCommands: Collection<string, ClientTextCommandCollectionData>;
 };
 
 export type BaseCommandReturnType = {
   data: SlashCommandBuilder;
-  execute: unknown;
+  execute: SlashCommandExecute;
   command: CommandsType;
   executeAsText: CommandExecuteAsText;
   needsToBeInSameVoiceChannel?: boolean;

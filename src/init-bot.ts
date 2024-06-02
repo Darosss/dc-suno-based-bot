@@ -45,6 +45,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 
   try {
+    if (command.needsToBeInSameVoiceChannel && !canUserUseCommands(interaction))
+      return;
+
     await command.execute(interaction);
   } catch (error) {
     console.error(error);

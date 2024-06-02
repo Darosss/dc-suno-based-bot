@@ -22,7 +22,10 @@ export const loadSlashCommands = async (client: ClientWithCommands) => {
 
     if ("data" in command && "execute" in command) {
       const commandAsserted = command as BaseCommandReturnType;
-      client.commands.set(commandAsserted.data!.name, commandAsserted);
+      client.commands.set(commandAsserted.data!.name, {
+        execute: commandAsserted.execute,
+        needsToBeInSameVoiceChannel: commandAsserted.needsToBeInSameVoiceChannel
+      });
       commands.push(commandAsserted.data.toJSON());
     } else {
       console.log(

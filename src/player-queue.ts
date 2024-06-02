@@ -188,20 +188,18 @@ class PlayerQueue {
     if (!this.statusData) return;
 
     await this.statusData.message.edit({
-      embeds: [createSongEmbed(this.currentSong)]
+      embeds: [createSongEmbed(this.currentSong, this.peek())]
     });
   }
 
   private async executeStatusPlayer() {
     if (this.statusData) return;
-    const statusChannel = client.channels.cache.get(
-      process.env.BOT_STATUS_CHANNEL_ID
-    );
+    const statusChannel = client.channels.cache.get(BOT_STATUS_CHANNEL_ID);
     if (!statusChannel || !statusChannel.isTextBased())
       return console.log("Status channel does not exist");
 
     const statusMessageInst = await statusChannel.send({
-      embeds: [createSongEmbed(this.currentSong)]
+      embeds: [createSongEmbed(this.currentSong, this.peek())]
     });
 
     this.statusData = {

@@ -9,6 +9,8 @@ const COMMAND_DATA = COMMANDS.songs;
 const downloadedSongsListCommand = async (message: MessageCommandType) => {
   const mp3AttachmentTxt = await sendPossibleFilesAsPrivMessage();
 
+  if (!mp3AttachmentTxt)
+    return await message.reply("No songs at all. Add some");
   if (!isDcMessage(message)) {
     await message.user.send({ files: [mp3AttachmentTxt] });
   } else {
@@ -20,6 +22,7 @@ const downloadedSongsListCommand = async (message: MessageCommandType) => {
 
 const sendPossibleFilesAsPrivMessage = async () => {
   const files = getMp3FromMusicFolder();
+  if (files.length <= 0) return;
   const mp3NamesTxt = await saveMp3ListToFile(files);
   const attachment = new AttachmentBuilder(mp3NamesTxt);
 

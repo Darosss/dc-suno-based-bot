@@ -61,7 +61,7 @@ class PlayerQueue {
 
   public peek() {
     if (this.isEmpty()) {
-      return console.log("No items in queue");
+      return;
     }
     return this.items.at(0);
   }
@@ -149,9 +149,6 @@ class PlayerQueue {
           resource
         };
         this.currentSong!.duration = duration * 1000;
-        getBotCommandsChannel()?.send(
-          `All good. Check <#${BOT_STATUS_CHANNEL_ID}> channel for player status`
-        );
         this.updateStatusMessage();
       } catch (err) {
         console.error("Error:", err);

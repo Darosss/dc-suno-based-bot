@@ -11,8 +11,9 @@ const skipCommand = (message: Message) => {
   }
 
   const skipped = PlayerQueue.skip();
-
-  return skipped ? message.reply("Song skipped!") : null;
+  return skipped
+    ? message.reply("Song skipped!")
+    : message.reply("Last song in player skipped");
 };
 
 const data = new SlashCommandBuilder()

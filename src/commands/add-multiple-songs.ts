@@ -14,11 +14,7 @@ const baseWrongMessageReply = `_Give me correct songs urls with ids each separat
 \`${process.env.COMMANDS_PREFIX}${COMMAND_DATA.name} https://suno.com/song/04db00ab-f7d7-40f8-a584-124b096beb31;https://suno.com/song/f1d5aad1-ec23-42e7-9e47-2617ea2de69a`;
 
 const addMultipleSongs = async (message: Message) => {
-  const messageSplited = removeCommandNameFromMessage(
-    message.content,
-    COMMAND_DATA
-  );
-  const songsUrls = messageSplited.at(-1);
+  const songsUrls = removeCommandNameFromMessage(message.content, COMMAND_DATA);
 
   if (!songsUrls) return await message.reply(baseWrongMessageReply);
 
@@ -39,12 +35,15 @@ const slashCommandAddMultipleSongs = async (
 };
 
 const addMultipleSongsLogic = async (songsUrls: string): Promise<string> => {
+  console.log(songsUrls);
   const songsUrlSplittedUnique = Array.from(
     new Set(songsUrls.split(";"))
   ).filter((url) => url.includes("https://suno.com/song/"));
   if (songsUrlSplittedUnique.length >= MAX_SONGS) {
     return `No more than ${MAX_SONGS} songs`;
   }
+
+  console.log(songsUrlSplittedUnique, "eee");
 
   const messagesToSend = [];
   for await (const songUrl of songsUrlSplittedUnique) {

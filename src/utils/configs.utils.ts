@@ -26,6 +26,8 @@ class ConfigsHandler {
     try {
       const newConfigs = { ...this.getConfigsFile(), ...data };
       await fs.promises.writeFile(CONFIG_PATH, JSON.stringify(newConfigs));
+
+      this.loadConfigs();
       return true;
     } catch (err) {
       console.error("Something went wrong while editing configs");

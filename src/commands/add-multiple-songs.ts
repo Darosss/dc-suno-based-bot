@@ -40,7 +40,7 @@ const addMultipleSongsLogic = async (songsUrls: string): Promise<string> => {
     new Set(songsUrls.split(";"))
   ).filter((url) => url.includes("https://suno.com/song/"));
   const maxSongs = ConfigsHandler.getConfigs().addMultipleSongsMaxCount;
-  if (songsUrlSplittedUnique.length >= maxSongs) {
+  if (songsUrlSplittedUnique.length > maxSongs) {
     return `No more than ${maxSongs} songs`;
   }
 

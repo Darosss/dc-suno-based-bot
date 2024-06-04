@@ -6,17 +6,15 @@ import {
   VoiceConnection,
   AudioPlayer
 } from "@discordjs/voice";
-import {
-  MAX_IDLE_TIME_MS,
-  MUSIC_FOLDER,
-  PLAYER_STATUS_UPDATE_MS
-} from "@/src/globals";
-import { getMp3Duration, isMp3Available } from "@/utils/mp3.utils";
+import { MUSIC_FOLDER } from "@/src/globals";
+import { getMp3Duration } from "@/utils/mp3.utils";
 import path from "path";
 import { Message, VoiceBasedChannel } from "discord.js";
 import { CurrentSongType, PlayerQueueItemType } from "./types";
 import { client } from "./init-bot";
-import { createSongEmbed, getBotCommandsChannel } from "./utils/dc.utils";
+import { createSongEmbed, getBotCommandsChannel } from "@/src/utils/dc.utils";
+import { isFileAccesilbe } from "@/src/utils/files.utils";
+import ConfigsHandler from "@/src/utils/configs.utils";
 
 const BOT_STATUS_CHANNEL_ID = process.env.BOT_STATUS_CHANNEL_ID;
 type EnqueueOptions = { resume: boolean };
@@ -112,7 +110,7 @@ class PlayerQueue {
           this.connection?.destroy();
           this.connection = null;
           this.clearStatusPlayer();
-        }, MAX_IDLE_TIME_MS);
+        }, ConfigsHandler.getConfigs().maxIdleTimeMs);
       }
     });
   }
@@ -129,7 +127,7 @@ class PlayerQueue {
         return console.error("No current song to play");
       const songPath = path.join(MUSIC_FOLDER, firstSong.name);
 
-      if (!isMp3Available(songPath)) {
+      if (!isFileAccesilbe(songPath)) {
         console.log("No file found, skip");
         return await this.start();
       }
@@ -208,7 +206,7 @@ class PlayerQueue {
         statusMessageInst.edit({
           embeds: [createSongEmbed(this.currentSong, this.peek())]
         });
-      }, PLAYER_STATUS_UPDATE_MS)
+      }, ConfigsHandler.getConfigs().playerStatusUpdateMs)
     };
   }
 

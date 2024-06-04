@@ -2,9 +2,9 @@ import PlayerQueue from "@/src/player-queue";
 import { getMp3FromMusicFolder } from "@/utils/mp3.utils";
 import { GuildMember, Message, SlashCommandBuilder } from "discord.js";
 import { COMMANDS } from "./commands-list";
-import { DEFAULT_MAX_RADIO_SONGS } from "@/src/globals";
-import { removeCommandNameFromMessage } from "../utils/dc.utils";
-import { MessageCommandType, MessageInteractionTypes } from "../types";
+import { removeCommandNameFromMessage } from "@/src/utils/dc.utils";
+import { MessageCommandType, MessageInteractionTypes } from "@/src/types";
+import ConfigsHandler from "@/src/utils/configs.utils";
 
 const SLASH_COMMAND_OPTION_SONG_COUNT = "songs-count";
 const COMMAND_DATA = COMMANDS.radio;
@@ -15,7 +15,7 @@ const startPlayCommand = (message: Message) => {
 
   const numberOfSongs =
     Number(removeCommandNameFromMessage(message.content, COMMAND_DATA)) ||
-    DEFAULT_MAX_RADIO_SONGS;
+    ConfigsHandler.getConfigs().maxRadioSongs;
 
   const returnMessage = startPlayCommandLogic(message, numberOfSongs);
 
@@ -32,7 +32,7 @@ const slashStartPlayCommand = async (message: MessageInteractionTypes) => {
   await message.reply("Trying to set radio on");
   const returnMessage = startPlayCommandLogic(
     message,
-    (songsCount as number) || DEFAULT_MAX_RADIO_SONGS
+    (songsCount as number) || ConfigsHandler.getConfigs().maxRadioSongs
   );
   return await message.editReply(returnMessage);
 };
@@ -42,11 +42,11 @@ const startPlayCommandLogic = (
   numberOfSongs: number
 ): string => {
   const files = getMp3FromMusicFolder().sort(() => 0.5 - Math.random());
-
+  const maxRadioSongs = ConfigsHandler.getConfigs().maxRadioSongs;
   const maxSongs =
-    numberOfSongs > DEFAULT_MAX_RADIO_SONGS
-      ? DEFAULT_MAX_RADIO_SONGS
-      : DEFAULT_MAX_RADIO_SONGS > files.length
+    numberOfSongs > maxRadioSongs
+      ? maxRadioSongs
+      : maxRadioSongs > files.length
         ? files.length
         : numberOfSongs;
 
@@ -81,7 +81,7 @@ const data = new SlashCommandBuilder()
     option
       .setName(SLASH_COMMAND_OPTION_SONG_COUNT)
       .setDescription("Set count of radio songs")
-      .setMaxValue(DEFAULT_MAX_RADIO_SONGS)
+      .setMaxValue(ConfigsHandler.getConfigs().maxRadioSongs)
       .setMinValue(2)
   )
   .setDescription(COMMAND_DATA.description)

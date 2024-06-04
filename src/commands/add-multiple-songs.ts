@@ -4,8 +4,8 @@ import { MUSIC_FOLDER } from "../globals";
 import { Message, SlashCommandBuilder } from "discord.js";
 import { MessageInteractionTypes } from "../types";
 import { removeCommandNameFromMessage } from "../utils/dc.utils";
+import ConfigsHandler from "@/src/utils/configs.utils";
 
-const MAX_SONGS = 5;
 const COMMAND_DATA = COMMANDS["add many songs"];
 const SLASH_COMMAND_OPTION_SONG_URLS = "songs-urls";
 
@@ -39,8 +39,9 @@ const addMultipleSongsLogic = async (songsUrls: string): Promise<string> => {
   const songsUrlSplittedUnique = Array.from(
     new Set(songsUrls.split(";"))
   ).filter((url) => url.includes("https://suno.com/song/"));
-  if (songsUrlSplittedUnique.length >= MAX_SONGS) {
-    return `No more than ${MAX_SONGS} songs`;
+  const maxSongs = ConfigsHandler.getConfigs().addMultipleSongsMaxCount;
+  if (songsUrlSplittedUnique.length >= maxSongs) {
+    return `No more than ${maxSongs} songs`;
   }
 
   console.log(songsUrlSplittedUnique, "eee");

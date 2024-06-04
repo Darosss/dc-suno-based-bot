@@ -10,7 +10,8 @@ export type COMMANDS_NAMES =
   | "commands"
   | "songs"
   | "shuffle"
-  | "repeat";
+  | "repeat"
+  | "edit configs";
 
 export type CommandsType = {
   name: string /**alias: string[] */;
@@ -44,6 +45,10 @@ export const COMMANDS: Record<COMMANDS_NAMES, CommandsType> = {
   repeat: {
     name: "repeat",
     description: "Turn on/off repeat songs"
+  },
+  "edit configs": {
+    name: "edit configs",
+    description: "Change my configs"
   }
 };
 

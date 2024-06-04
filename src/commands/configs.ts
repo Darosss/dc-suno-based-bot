@@ -34,8 +34,22 @@ const SLASH_COMMAND_OPTIONS_NAMES: SlashCommandOptionsNamesType = {
   maxRadioSongs: {
     name: "max-radio-songs",
     description: "Max songs in radio command"
+  },
+  ytPlayerMaxSongDuration: {
+    name: "yt-player-max-song-duration",
+    description: "Max duration for youtube content"
+  },
+  ytPlayerMinViews: {
+    name: "yt-player-min-views",
+    description: "Min views for youtube content"
   }
 };
+
+const getMessageOfChangedConfigs = (config: Partial<ConfigsType>) =>
+  Object.entries(config)
+    .filter(([, value]) => value)
+    .map(([key, nonNullVal]) => `${key}: ${nonNullVal}`)
+    .join("\n");
 
 const configsCommand = (message: Message) => {
   if (message.member?.id !== process.env.OWNER_ID)
@@ -62,9 +76,6 @@ const slashConfigsCommands = async (message: MessageInteractionTypes) => {
       playerStatusUpdateMs
         ? (configsToUpdate.playerStatusUpdateMs = playerStatusUpdateMs)
         : null;
-      await message.reply(
-        `New Player Options:\nMax Idle Time: ${maxIdleTimeMs}\nPlayer Status Update Interval: ${playerStatusUpdateMs}`
-      );
     } else if (subcommand === "commands") {
       const maxRadioSongs = message.options.getNumber(
         SLASH_COMMAND_OPTIONS_NAMES.maxRadioSongs.name
@@ -72,19 +83,29 @@ const slashConfigsCommands = async (message: MessageInteractionTypes) => {
       const addMultipleSongsMaxCount = message.options.getNumber(
         SLASH_COMMAND_OPTIONS_NAMES.addMultipleSongsMaxCount.name
       );
+      const ytPlayerMaxSongDuration = message.options.getNumber(
+        SLASH_COMMAND_OPTIONS_NAMES.ytPlayerMaxSongDuration.name
+      );
+      const ytPlayerMinViews = message.options.getNumber(
+        SLASH_COMMAND_OPTIONS_NAMES.ytPlayerMinViews.name
+      );
 
       maxRadioSongs ? (configsToUpdate.maxRadioSongs = maxRadioSongs) : null;
       addMultipleSongsMaxCount
         ? (configsToUpdate.addMultipleSongsMaxCount = addMultipleSongsMaxCount)
         : null;
-      await message.reply(
-        `New Command Options:\nMax Radio Songs: ${maxRadioSongs}\nAdd Multiple Songs Max Count: ${addMultipleSongsMaxCount}`
-      );
+
+      ytPlayerMaxSongDuration
+        ? (configsToUpdate.ytPlayerMaxSongDuration = ytPlayerMaxSongDuration)
+        : null;
+
+      ytPlayerMinViews
+        ? (configsToUpdate.ytPlayerMinViews = ytPlayerMinViews)
+        : null;
     } else if (subcommand === "defaults") {
       const resetToDefaults = message.options.getBoolean(
         SLASH_COMMAND_DEFAULT_OPTION_NAME
       );
-      console.log(resetToDefaults, "aa");
 
       if (resetToDefaults) {
         ConfigsHandler.resetToDefaults();
@@ -95,6 +116,10 @@ const slashConfigsCommands = async (message: MessageInteractionTypes) => {
     } else {
       await message.reply("No subcommand selected");
     }
+
+    await message.reply(
+      `New ${subcommand} options:\n ${getMessageOfChangedConfigs(configsToUpdate)}`
+    );
 
     ConfigsHandler.editConfigsFile(configsToUpdate);
   } else {
@@ -157,6 +182,24 @@ const data = new SlashCommandBuilder()
           .setDescription(SLASH_COMMAND_OPTIONS_NAMES.maxRadioSongs.description)
           .setMinValue(2)
           .setMaxValue(100)
+          .setRequired(false)
+      )
+      .addNumberOption((option) =>
+        option
+          .setName(SLASH_COMMAND_OPTIONS_NAMES.ytPlayerMaxSongDuration.name)
+          .setDescription(
+            SLASH_COMMAND_OPTIONS_NAMES.ytPlayerMaxSongDuration.description
+          )
+          .setMinValue(0)
+          .setRequired(false)
+      )
+      .addNumberOption((option) =>
+        option
+          .setName(SLASH_COMMAND_OPTIONS_NAMES.ytPlayerMinViews.name)
+          .setDescription(
+            SLASH_COMMAND_OPTIONS_NAMES.ytPlayerMinViews.description
+          )
+          .setMinValue(0)
           .setRequired(false)
       )
   );

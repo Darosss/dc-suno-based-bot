@@ -7,13 +7,17 @@ export type ConfigsType = {
   playerStatusUpdateMs: number;
   maxRadioSongs: number;
   addMultipleSongsMaxCount: number;
+  ytPlayerMaxSongDuration: number;
+  ytPlayerMinViews: number;
 };
 
 const defaultConfigs: ConfigsType = {
   maxIdleTimeMs: 25000,
   playerStatusUpdateMs: 10000,
   maxRadioSongs: 10,
-  addMultipleSongsMaxCount: 10
+  addMultipleSongsMaxCount: 10,
+  ytPlayerMaxSongDuration: 720,
+  ytPlayerMinViews: 1000
 };
 
 class ConfigsHandler {

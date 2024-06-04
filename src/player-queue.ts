@@ -140,13 +140,11 @@ class PlayerQueue {
       this.audioPlayer.play(resource);
 
       try {
-        const duration = await getMp3Duration(songPath);
         this.currentSong = {
           ...firstSong,
-          duration: 0,
+          duration: (await getMp3Duration(songPath)) * 1000,
           resource
         };
-        this.currentSong!.duration = duration * 1000;
         this.updateStatusMessage();
       } catch (err) {
         console.error("Error:", err);

@@ -2,6 +2,9 @@ import { load as cherrioLoad } from "cheerio";
 import fs from "fs";
 import https from "https";
 import { MUSIC_FOLDER } from "./globals";
+import internal from "stream";
+import ytdl from "ytdl-core";
+import path from "path";
 type SongData = {
   fileNameTitle?: string;
   songId: string;
@@ -105,4 +108,17 @@ const getMp3AndDownload = async (
   } else {
     return { message: `${fileName} already exists.`, fileName };
   }
+};
+
+export const downloadYtMp3 = (
+  streamYt: internal.Readable,
+  videoDetails: ytdl.MoreVideoDetails,
+  absoluteDownloadPath: string
+): string => {
+  const songName = `${videoDetails.title}-${videoDetails.videoId}.mp3`;
+  streamYt.pipe(
+    fs.createWriteStream(path.join(absoluteDownloadPath, songName))
+  );
+
+  return songName;
 };

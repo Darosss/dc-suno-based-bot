@@ -3,6 +3,7 @@ import { MessageCommandType } from "../types";
 
 export type COMMANDS_NAMES =
   | "play"
+  | "yt play"
   | "skip"
   | "stop"
   | "radio"
@@ -22,6 +23,10 @@ export const COMMANDS: Record<COMMANDS_NAMES, CommandsType> = {
   play: {
     name: "play",
     description: `Play any song from suno you want.`
+  },
+  "yt play": {
+    name: "yt play",
+    description: `Play song from youtube.`
   },
   skip: { name: "skip", description: "Skips a song owner only(for now)" },
   stop: { name: "stop", description: "Stops a player owner only(for now)" },

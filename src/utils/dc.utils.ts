@@ -5,13 +5,23 @@ import {
   EmbedBuilder,
   GuildMember,
   Interaction,
-  Message
+  Message,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle
 } from "discord.js";
 import {
   CurrentSongType,
   MessageCommandType,
-  PlayerQueueItemType
+  PlayerQueueItemType,
+  SongYTBaseData
 } from "../types";
+
+export const componentInteractionSeparator = ":";
+
+export enum ComponentInteractionName {
+  YT_PLAY = `yt-play`
+}
 
 export const removeCommandNameFromMessage = (
   message: string,
@@ -97,4 +107,25 @@ export const getBotCommandsChannel = () => {
 
   if (commandsChannel?.isTextBased()) return commandsChannel;
   else console.error("Provided commands channel is not text based");
+};
+
+export const createSongYTChooseEmbed = (data: SongYTBaseData[]) => {
+  const embed = new EmbedBuilder()
+    .setTitle("Choose song to play:")
+    .setDescription(
+      data.map((video, index) => `${index + 1}. ${video.name}`).join("\n")
+    );
+
+  const buttons = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    data.map((video, index) =>
+      new ButtonBuilder()
+        .setCustomId(
+          `${ComponentInteractionName.YT_PLAY}${componentInteractionSeparator}${video.id}`
+        )
+        .setLabel(`${index + 1}`)
+        .setStyle(ButtonStyle.Primary)
+    )
+  );
+
+  return { embed, buttons };
 };

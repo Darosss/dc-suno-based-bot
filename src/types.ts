@@ -1,4 +1,5 @@
 import {
+  ButtonInteraction,
   ChatInputCommandInteraction,
   Client,
   Collection,
@@ -9,12 +10,15 @@ import {
 } from "discord.js";
 import { CommandsType } from "./commands/commands-list";
 import { AudioResource } from "@discordjs/voice";
+import { ComponentInteractionName } from "./utils/dc.utils";
 
 export type TODO = any;
 
 type CommandExecuteAsText = (message: Message) => unknown;
 
 type SlashCommandExecute = (message: MessageInteractionTypes) => unknown;
+
+type ButtonInteractionExecute = (interaction: ButtonInteraction) => unknown;
 
 type ClientTextCommandCollectionData = {
   execute: CommandExecuteAsText;
@@ -24,10 +28,15 @@ type ClientSlashCommandCollectionData = {
   execute: SlashCommandExecute;
   needsToBeInSameVoiceChannel?: boolean;
 };
+type ClientButtonInteractionCollectionData = {
+  execute: ButtonInteractionExecute;
+  needsToBeInSameVoiceChannel?: boolean;
+};
 
 export type ClientWithCommands = Client & {
   commands: Collection<string, ClientSlashCommandCollectionData>;
   textCommands: Collection<string, ClientTextCommandCollectionData>;
+  buttonInteractions: Collection<string, ClientButtonInteractionCollectionData>;
 };
 
 export type BaseCommandReturnType = {
@@ -36,6 +45,11 @@ export type BaseCommandReturnType = {
   command: CommandsType;
   executeAsText: CommandExecuteAsText;
   needsToBeInSameVoiceChannel?: boolean;
+};
+
+export type BaseButtonInteractionReturnType = BaseCommandReturnType & {
+  executeAsButton: ButtonInteractionExecute;
+  buttonInterractionCustomIdPrefix: ComponentInteractionName;
 };
 
 export type MessageInteractionTypes =
@@ -53,4 +67,9 @@ export type PlayerQueueItemType = {
 export type CurrentSongType = PlayerQueueItemType & {
   duration: number;
   resource: Pick<AudioResource, "playbackDuration">;
+};
+
+export type SongYTBaseData = {
+  name: string;
+  id: string;
 };

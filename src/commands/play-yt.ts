@@ -1,25 +1,60 @@
 import PlayerQueue from "@/src/player-queue";
-import { GuildMember, Message, SlashCommandBuilder } from "discord.js";
+import {
+  ButtonInteraction,
+  GuildMember,
+  Message,
+  SlashCommandBuilder
+} from "discord.js";
 import { COMMANDS } from "./commands-list";
-import { removeCommandNameFromMessage } from "@/utils/dc.utils";
+import {
+  ComponentInteractionName,
+  componentInteractionSeparator,
+  createSongYTChooseEmbed,
+  removeCommandNameFromMessage
+} from "@/utils/dc.utils";
 import ytdl, { getInfo } from "ytdl-core";
 import ConfigsHandler from "@/utils/configs.utils";
 import { downloadYtMp3 } from "@/src/download-logic";
 import { MUSIC_FOLDER } from "@/src/globals";
-import { MessageInteractionTypes } from "@/src/types";
+import { MessageInteractionTypes, SongYTBaseData } from "@/src/types";
+import yts from "yt-search";
 
 const COMMAND_DATA = COMMANDS["yt play"];
+const BUTTON_CUSTOM_ID_PREFIX = ComponentInteractionName.YT_PLAY;
 const SLASH_COMMAND_OPTION_SONG_URL = "song-url";
-const YOUTUBE_LINK = "https://www.youtube.com/";
+export const YOUTUBE_LINK = "https://www.youtube.com/";
 const WRONG_URL_MESSAGE = "You need to provide correct song url";
 
 const playYtCommand = async (message: Message) => {
   const songUrl = removeCommandNameFromMessage(message.content, COMMAND_DATA);
-  if (!songUrl || !songUrl.includes(YOUTUBE_LINK))
-    return await message.reply(WRONG_URL_MESSAGE);
+  if (!songUrl || !songUrl.includes(YOUTUBE_LINK)) {
+    const data = await getYoutubeSearchByName(songUrl);
+
+    return await message.reply({
+      embeds: [data.embed],
+      components: [data.buttons]
+    });
+  }
 
   const messageToSend = await playYtCommandLogic(songUrl, message.member);
   return await message.reply(messageToSend);
+};
+
+const getYoutubeSearchByName = async (name: string, count = 5) => {
+  const r = await yts(name);
+
+  const videos = r.videos
+    .filter((video) => {
+      const configs = ConfigsHandler.getConfigs();
+      return (
+        video.duration.seconds <= configs.ytPlayerMaxSongDuration &&
+        video.views >= configs.ytPlayerMinViews
+      );
+    })
+    .slice(0, count)
+    .map<SongYTBaseData>((video) => ({ name: video.title, id: video.videoId }));
+
+  return createSongYTChooseEmbed(videos);
 };
 
 const slashPlayYtCommand = async (message: MessageInteractionTypes) => {
@@ -38,7 +73,7 @@ const slashPlayYtCommand = async (message: MessageInteractionTypes) => {
   return await message.editReply(returnMessage);
 };
 
-const playYtCommandLogic = async (
+export const playYtCommandLogic = async (
   songUrl: string,
   member: GuildMember | null
 ) => {
@@ -82,6 +117,14 @@ const playYtCommandLogic = async (
   }
 };
 
+const executeAsButton = async (interaction: ButtonInteraction) => {
+  const message = await playYtCommandLogic(
+    `${YOUTUBE_LINK}watch?v=${interaction.customId.split(componentInteractionSeparator).at(-1)}`,
+    interaction.member as GuildMember
+  );
+  return await interaction.reply(message);
+};
+
 const data = new SlashCommandBuilder()
   .setName(COMMAND_DATA.name.replaceAll(" ", "-"))
   .setDescription(COMMAND_DATA.description)
@@ -98,5 +141,7 @@ export {
   slashPlayYtCommand as execute,
   COMMAND_DATA as command,
   playYtCommand as executeAsText,
-  needsToBeInSameVoiceChannel
+  needsToBeInSameVoiceChannel,
+  BUTTON_CUSTOM_ID_PREFIX as buttonInterractionCustomIdPrefix,
+  executeAsButton
 };

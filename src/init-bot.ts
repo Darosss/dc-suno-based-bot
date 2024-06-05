@@ -3,7 +3,11 @@ import { COMMANDS } from "./commands/commands-list";
 import { loadSlashCommands } from "./load-slash-commands";
 import { ClientWithCommands } from "./types";
 import { loadTextCommands } from "./load-text-commands";
-import { canUserUseCommands } from "./utils/dc.utils";
+import {
+  canUserUseCommands,
+  componentInteractionSeparator
+} from "./utils/dc.utils";
+import { loadButtonInteractions } from "./load-button-interactions";
 
 const COMMANDS_PREFIX = process.env.COMMANDS_PREFIX;
 const BOT_COMMAND_CHANNEL_ID = process.env.BOT_COMMANDS_CHANNEL_ID;
@@ -21,6 +25,7 @@ client.once("ready", () => {
 
   loadSlashCommands(client);
   loadTextCommands(client);
+  loadButtonInteractions(client);
 
   client.user?.setPresence({
     activities: [
@@ -33,34 +38,50 @@ client.once("ready", () => {
   });
 });
 client.on(Events.InteractionCreate, async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
+  if (interaction.isButton()) {
+    const customIdKey = interaction.customId
+      .split(componentInteractionSeparator)
+      .at(0);
 
-  const command = (interaction.client as ClientWithCommands).commands.get(
-    interaction.commandName
-  );
+    if (!customIdKey) return;
+    const buttonInterraction = (
+      interaction.client as ClientWithCommands
+    ).buttonInteractions.get(customIdKey);
 
-  if (!command) {
-    console.error(`No command matching ${interaction.commandName} was found.`);
-    return;
-  }
+    buttonInterraction?.execute(interaction);
+  } else if (interaction.isChatInputCommand()) {
+    const command = (interaction.client as ClientWithCommands).commands.get(
+      interaction.commandName
+    );
 
-  try {
-    if (command.needsToBeInSameVoiceChannel && !canUserUseCommands(interaction))
+    if (!command) {
+      console.error(
+        `No command matching ${interaction.commandName} was found.`
+      );
       return;
+    }
 
-    await command.execute(interaction);
-  } catch (error) {
-    console.error(error);
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({
-        content: "There was an error while executing this command!",
-        ephemeral: true
-      });
-    } else {
-      await interaction.reply({
-        content: "There was an error while executing this command!",
-        ephemeral: true
-      });
+    try {
+      if (
+        command.needsToBeInSameVoiceChannel &&
+        !canUserUseCommands(interaction)
+      )
+        return;
+
+      await command.execute(interaction);
+    } catch (error) {
+      console.error(error);
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp({
+          content: "There was an error while executing this command!",
+          ephemeral: true
+        });
+      } else {
+        await interaction.reply({
+          content: "There was an error while executing this command!",
+          ephemeral: true
+        });
+      }
     }
   }
 });

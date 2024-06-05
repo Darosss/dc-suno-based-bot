@@ -21,9 +21,8 @@ import yts from "yt-search";
 
 const COMMAND_DATA = COMMANDS["yt play"];
 const BUTTON_CUSTOM_ID_PREFIX = ComponentInteractionName.YT_PLAY;
-const SLASH_COMMAND_OPTION_SONG_URL = "song-url";
+const SLASH_COMMAND_OPTION_SONG_URL = "song-url-or-name";
 export const YOUTUBE_LINK = "https://www.youtube.com/";
-const WRONG_URL_MESSAGE = "You need to provide correct song url";
 
 const playYtCommand = async (message: Message) => {
   const songUrl = removeCommandNameFromMessage(message.content, COMMAND_DATA);
@@ -61,8 +60,14 @@ const slashPlayYtCommand = async (message: MessageInteractionTypes) => {
   const songUrl = message.options.get(SLASH_COMMAND_OPTION_SONG_URL)
     ?.value as string;
 
-  if (!songUrl || !songUrl.includes(YOUTUBE_LINK))
-    return await message.reply(WRONG_URL_MESSAGE);
+  if (!songUrl || !songUrl.includes(YOUTUBE_LINK)) {
+    const data = await getYoutubeSearchByName(songUrl);
+
+    return await message.reply({
+      embeds: [data.embed],
+      components: [data.buttons]
+    });
+  }
 
   await message.reply("Trying to add your songs");
 
@@ -130,7 +135,7 @@ const data = new SlashCommandBuilder()
   .addStringOption((option) =>
     option
       .setName(SLASH_COMMAND_OPTION_SONG_URL)
-      .setDescription("Provide song url")
+      .setDescription("Provide song url or search name")
   );
 
 const needsToBeInSameVoiceChannel = true;

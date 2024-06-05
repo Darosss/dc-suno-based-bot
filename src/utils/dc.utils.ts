@@ -39,8 +39,10 @@ export const canUserUseCommands = (message: MessageCommandType) => {
   return canUse;
 };
 
-export const isDcMessage = (pet: Message | Interaction): pet is Message => {
-  return (pet as Message).author !== undefined;
+export const isDcMessage = (
+  message: Message | Interaction
+): message is Message => {
+  return (message as Message).author !== undefined;
 };
 
 export const createSongEmbed = (

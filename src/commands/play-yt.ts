@@ -90,7 +90,7 @@ export const playYtCommandLogic = async (
       return `The song has lower views than expected. Your song: \`${videoDetails.viewCount}\` Min views: \`${configs.ytPlayerMinViews}\``;
     }
 
-    const songName = downloadYtMp3(stream, videoDetails, MUSIC_FOLDER);
+    const songName = await downloadYtMp3(stream, videoDetails, MUSIC_FOLDER);
     const messageMemberGuildMember = member as GuildMember;
     const channel = messageMemberGuildMember?.voice.channel;
     if (!channel) {
@@ -98,7 +98,6 @@ export const playYtCommandLogic = async (
     }
     if (songName) {
       PlayerQueue.setConnection(channel).then(() => {
-        console.log("added?");
         PlayerQueue.enqueue(
           {
             name: songName,

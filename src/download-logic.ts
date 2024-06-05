@@ -5,6 +5,7 @@ import { MUSIC_FOLDER } from "./globals";
 import internal from "stream";
 import ytdl from "ytdl-core";
 import path from "path";
+import { isFileAccesilbe } from "./utils/files.utils";
 type SongData = {
   fileNameTitle?: string;
   songId: string;
@@ -110,15 +111,19 @@ const getMp3AndDownload = async (
   }
 };
 
-export const downloadYtMp3 = (
+export const downloadYtMp3 = async (
   streamYt: internal.Readable,
   videoDetails: ytdl.MoreVideoDetails,
   absoluteDownloadPath: string
-): string => {
+): Promise<string> => {
   const songName = `${videoDetails.title}-${videoDetails.videoId}.mp3`;
-  streamYt.pipe(
-    fs.createWriteStream(path.join(absoluteDownloadPath, songName))
-  );
+  const songPath = path.join(MUSIC_FOLDER, songName);
+  if (!(await isFileAccesilbe(songPath))) {
+    streamYt.pipe(
+      fs.createWriteStream(path.join(absoluteDownloadPath, songName))
+    );
+  } else {
+  }
 
   return songName;
 };

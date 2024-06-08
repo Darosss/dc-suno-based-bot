@@ -1,4 +1,9 @@
-import { ChannelType, Message, SlashCommandBuilder } from "discord.js";
+import {
+  ChannelType,
+  CommandInteractionOption,
+  Message,
+  SlashCommandBuilder
+} from "discord.js";
 import { COMMANDS } from "./commands-list";
 
 import { BaseExecuteOptions, MessageInteractionTypes } from "../types";
@@ -6,6 +11,11 @@ import { ConfigsType } from "@/utils/configs.utils";
 import ConfigsHandler from "@/utils/configs.utils";
 
 const COMMAND_DATA = COMMANDS["edit configs"];
+
+type FilledOptionsKeysType = Pick<CommandInteractionOption, "value"> & {
+  name: keyof ConfigsType;
+  channelId?: string;
+};
 
 type SlashCommandOptionType = {
   name: string;
@@ -66,83 +76,73 @@ const configsCommand = (message: Message) => {
 };
 
 const slashConfigsCommands = async (message: MessageInteractionTypes) => {
-  if ("getSubcommand" in message.options) {
-    const subcommand = message.options.getSubcommand();
-    const configsToUpdate: Partial<ConfigsType> = {};
-    if (subcommand === "player") {
-      const maxIdleTimeMs = message.options.getNumber(
-        SLASH_COMMAND_OPTIONS_NAMES.maxIdleTimeMs.name
-      );
-      const playerStatusUpdateMs = message.options.getNumber(
-        SLASH_COMMAND_OPTIONS_NAMES.playerStatusUpdateMs.name
-      );
-      const botComandsChannelId = message.options.getChannel(
-        SLASH_COMMAND_OPTIONS_NAMES.botComandsChannelId.name
-      )?.id;
-      const botStatusChannelId = message.options.getChannel(
-        SLASH_COMMAND_OPTIONS_NAMES.botStatusChannelId.name
-      )?.id;
+  const configsToUpdate: Partial<ConfigsType> = {};
 
-      maxIdleTimeMs ? (configsToUpdate.maxIdleTimeMs = maxIdleTimeMs) : null;
-      playerStatusUpdateMs
-        ? (configsToUpdate.playerStatusUpdateMs = playerStatusUpdateMs)
-        : null;
+  if (!("getSubcommand" in message.options)) {
+    return await message.reply("Something went wrong. Try again");
+  }
 
-      botComandsChannelId
-        ? (configsToUpdate.botComandsChannelId = botComandsChannelId)
-        : null;
-      botStatusChannelId
-        ? (configsToUpdate.botStatusChannelId = botStatusChannelId)
-        : null;
-    } else if (subcommand === "commands") {
-      const maxRadioSongs = message.options.getNumber(
-        SLASH_COMMAND_OPTIONS_NAMES.maxRadioSongs.name
-      );
-      const addMultipleSongsMaxCount = message.options.getNumber(
-        SLASH_COMMAND_OPTIONS_NAMES.addMultipleSongsMaxCount.name
-      );
-      const ytPlayerMaxSongDuration = message.options.getNumber(
-        SLASH_COMMAND_OPTIONS_NAMES.ytPlayerMaxSongDuration.name
-      );
-      const ytPlayerMinViews = message.options.getNumber(
-        SLASH_COMMAND_OPTIONS_NAMES.ytPlayerMinViews.name
-      );
-
-      maxRadioSongs ? (configsToUpdate.maxRadioSongs = maxRadioSongs) : null;
-      addMultipleSongsMaxCount
-        ? (configsToUpdate.addMultipleSongsMaxCount = addMultipleSongsMaxCount)
-        : null;
-
-      ytPlayerMaxSongDuration
-        ? (configsToUpdate.ytPlayerMaxSongDuration = ytPlayerMaxSongDuration)
-        : null;
-
-      ytPlayerMinViews
-        ? (configsToUpdate.ytPlayerMinViews = ytPlayerMinViews)
-        : null;
-    } else if (subcommand === "defaults") {
-      const resetToDefaults = message.options.getBoolean(
-        SLASH_COMMAND_DEFAULT_OPTION_NAME
-      );
-
-      if (resetToDefaults) {
-        ConfigsHandler.resetToDefaults();
-        return await message.reply("Configs reseted to defaults");
-      }
-
-      await message.reply("You didn't set to true - skip");
-    } else {
-      await message.reply("No subcommand selected");
-    }
-
-    await message.reply(
-      `New ${subcommand} options:\n ${getMessageOfChangedConfigs(configsToUpdate)}`
+  const subcommand = message.options.getSubcommand();
+  if (subcommand === "defaults") {
+    const resetToDefaults = message.options.getBoolean(
+      SLASH_COMMAND_DEFAULT_OPTION_NAME
     );
 
-    ConfigsHandler.editConfigsFile(configsToUpdate);
+    if (resetToDefaults) {
+      ConfigsHandler.resetToDefaults();
+      return await message.reply("Configs reseted to defaults");
+    }
+
+    await message.reply("You didn't set to true - skip");
   } else {
-    await message.reply("Something went wrong. Try again");
+    const filledKeys = getFilledOptionsKeys(message);
+    updateCommandsDependsOnFilledOptions(filledKeys, message, configsToUpdate);
   }
+
+  await message.reply(
+    `New ${subcommand} options:\n ${getMessageOfChangedConfigs(configsToUpdate)}`
+  );
+
+  ConfigsHandler.editConfigsFile(configsToUpdate);
+};
+
+const getFilledOptionsKeys = (message: MessageInteractionTypes) => {
+  return message.options.data
+    .filter((data) => data.options !== undefined)
+    .flatMap<FilledOptionsKeysType>((messDataOpts) =>
+      messDataOpts.options!.map((optVal) => {
+        const fittingKey = Object.entries(SLASH_COMMAND_OPTIONS_NAMES)
+          .find(([, optionNamesData]) => optionNamesData.name === optVal.name)!
+          .at(0) as keyof ConfigsType;
+        return {
+          name: fittingKey,
+          value: optVal.value,
+          channelId: optVal.channel?.id
+        };
+      })
+    );
+};
+
+const updateCommandsDependsOnFilledOptions = (
+  filledKeys: FilledOptionsKeysType[],
+  message: MessageInteractionTypes,
+  configsToUpdate: Partial<ConfigsType>
+) => {
+  filledKeys.map((data) => {
+    if (data?.channelId) {
+      if ("getChannel" in message.options) {
+        const keyAsConfigTypeKey = data.name;
+
+        (configsToUpdate[keyAsConfigTypeKey] as string) = data.channelId;
+      }
+    } else {
+      if (typeof data?.value === "number" && "getNumber" in message.options) {
+        const keyAsConfigTypeKey = data.name;
+
+        (configsToUpdate[keyAsConfigTypeKey] as number) = data.value;
+      }
+    }
+  });
 };
 
 const data = new SlashCommandBuilder()

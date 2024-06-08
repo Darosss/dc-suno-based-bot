@@ -9,6 +9,8 @@ export type ConfigsType = {
   addMultipleSongsMaxCount: number;
   ytPlayerMaxSongDuration: number;
   ytPlayerMinViews: number;
+  botComandsChannelId: string;
+  botStatusChannelId: string;
 };
 
 const defaultConfigs: ConfigsType = {
@@ -17,7 +19,9 @@ const defaultConfigs: ConfigsType = {
   maxRadioSongs: 10,
   addMultipleSongsMaxCount: 10,
   ytPlayerMaxSongDuration: 720,
-  ytPlayerMinViews: 1000
+  ytPlayerMinViews: 1000,
+  botComandsChannelId: process.env.BOT_COMMANDS_CHANNEL_ID,
+  botStatusChannelId: process.env.BOT_STATUS_CHANNEL_ID
 };
 
 class ConfigsHandler {

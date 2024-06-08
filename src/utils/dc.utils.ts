@@ -16,6 +16,7 @@ import {
   PlayerQueueItemType,
   SongYTBaseData
 } from "../types";
+import ConfigsHandler from "@/utils/configs.utils";
 
 export const componentInteractionSeparator = ":";
 
@@ -99,10 +100,10 @@ const formatTime = (miliseconds: number) => {
   const secs = Math.floor((miliseconds / 1000) % 60);
   return `${minutes}:${secs < 10 ? "0" : ""}${secs}`;
 };
-
 export const getBotCommandsChannel = () => {
   const commandsChannel = client.channels.cache.get(
-    process.env.BOT_COMMANDS_CHANNEL_ID
+    ConfigsHandler.getConfigs().botComandsChannelId ||
+      process.env.BOT_COMMANDS_CHANNEL_ID
   );
 
   if (commandsChannel?.isTextBased()) return commandsChannel;

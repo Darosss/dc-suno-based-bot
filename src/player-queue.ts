@@ -16,7 +16,6 @@ import { createSongEmbed, getBotCommandsChannel } from "@/src/utils/dc.utils";
 import { isFileAccesilbe } from "@/src/utils/files.utils";
 import ConfigsHandler from "@/src/utils/configs.utils";
 
-const BOT_STATUS_CHANNEL_ID = process.env.BOT_STATUS_CHANNEL_ID;
 type EnqueueOptions = { resume: boolean };
 
 type StatusDataType = {
@@ -190,7 +189,9 @@ class PlayerQueue {
 
   private async executeStatusPlayer() {
     if (this.statusData) return;
-    const statusChannel = client.channels.cache.get(BOT_STATUS_CHANNEL_ID);
+    const statusChannel = client.channels.cache.get(
+      ConfigsHandler.getConfigs().botStatusChannelId
+    );
     if (!statusChannel || !statusChannel.isTextBased())
       return console.log("Status channel does not exist");
 

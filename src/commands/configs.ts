@@ -1,4 +1,4 @@
-import { Message, SlashCommandBuilder } from "discord.js";
+import { ChannelType, Message, SlashCommandBuilder } from "discord.js";
 import { COMMANDS } from "./commands-list";
 
 import { MessageInteractionTypes } from "../types";
@@ -42,6 +42,14 @@ const SLASH_COMMAND_OPTIONS_NAMES: SlashCommandOptionsNamesType = {
   ytPlayerMinViews: {
     name: "yt-player-min-views",
     description: "Min views for youtube content"
+  },
+  botStatusChannelId: {
+    name: "bot-status-channel-id",
+    description: "Set channel id for bot music player status"
+  },
+  botComandsChannelId: {
+    name: "bot-commands-channel-id",
+    description: "Set channel id for bot commands channel"
   }
 };
 
@@ -71,10 +79,23 @@ const slashConfigsCommands = async (message: MessageInteractionTypes) => {
       const playerStatusUpdateMs = message.options.getNumber(
         SLASH_COMMAND_OPTIONS_NAMES.playerStatusUpdateMs.name
       );
+      const botComandsChannelId = message.options.getChannel(
+        SLASH_COMMAND_OPTIONS_NAMES.botComandsChannelId.name
+      )?.id;
+      const botStatusChannelId = message.options.getChannel(
+        SLASH_COMMAND_OPTIONS_NAMES.botStatusChannelId.name
+      )?.id;
 
       maxIdleTimeMs ? (configsToUpdate.maxIdleTimeMs = maxIdleTimeMs) : null;
       playerStatusUpdateMs
         ? (configsToUpdate.playerStatusUpdateMs = playerStatusUpdateMs)
+        : null;
+
+      botComandsChannelId
+        ? (configsToUpdate.botComandsChannelId = botComandsChannelId)
+        : null;
+      botStatusChannelId
+        ? (configsToUpdate.botStatusChannelId = botStatusChannelId)
         : null;
     } else if (subcommand === "commands") {
       const maxRadioSongs = message.options.getNumber(
@@ -159,6 +180,24 @@ const data = new SlashCommandBuilder()
             SLASH_COMMAND_OPTIONS_NAMES.playerStatusUpdateMs.description
           )
           .setMinValue(1000)
+          .setRequired(false)
+      )
+      .addChannelOption((option) =>
+        option
+          .setName(SLASH_COMMAND_OPTIONS_NAMES.botComandsChannelId.name)
+          .setDescription(
+            SLASH_COMMAND_OPTIONS_NAMES.botComandsChannelId.description
+          )
+          .addChannelTypes(ChannelType.GuildText)
+          .setRequired(false)
+      )
+      .addChannelOption((option) =>
+        option
+          .setName(SLASH_COMMAND_OPTIONS_NAMES.botStatusChannelId.name)
+          .setDescription(
+            SLASH_COMMAND_OPTIONS_NAMES.botStatusChannelId.description
+          )
+          .addChannelTypes(ChannelType.GuildText)
           .setRequired(false)
       )
   )

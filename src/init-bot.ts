@@ -8,9 +8,9 @@ import {
   componentInteractionSeparator
 } from "./utils/dc.utils";
 import { loadButtonInteractions } from "./load-button-interactions";
+import ConfigsHandler from "./utils/configs.utils";
 
 const COMMANDS_PREFIX = process.env.COMMANDS_PREFIX;
-const BOT_COMMAND_CHANNEL_ID = process.env.BOT_COMMANDS_CHANNEL_ID;
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -87,7 +87,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
 });
 
 client.on(Events.MessageCreate, async (dcMessage) => {
-  if (dcMessage.channelId !== BOT_COMMAND_CHANNEL_ID) return;
+  if (dcMessage.channelId !== ConfigsHandler.getConfigs().botComandsChannelId)
+    return;
   if (!dcMessage.content.startsWith(COMMANDS_PREFIX)) return;
 
   const messageContentWithoutPrefix = dcMessage.content.slice(

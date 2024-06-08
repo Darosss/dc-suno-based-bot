@@ -1,12 +1,15 @@
 import PlayerQueue from "@/src/player-queue";
 import { Message, SlashCommandBuilder } from "discord.js";
 import { COMMANDS } from "./commands-list";
+import { BaseExecuteOptions } from "../types";
 
 const COMMAND_DATA = COMMANDS.skip;
 
 const skipCommand = (message: Message) => {
-  if (message.member?.id === process.env.OWNER_ID) {
-  } else if (message.member?.id !== PlayerQueue.getCurrentSong()?.requester) {
+  if (
+    message.member?.id !== process.env.OWNER_ID &&
+    message.member?.id !== PlayerQueue.getCurrentSong()?.requester
+  ) {
     return message.reply("You can skip only yours songs");
   }
 
@@ -20,12 +23,13 @@ const data = new SlashCommandBuilder()
   .setName(COMMAND_DATA.name)
   .setDescription(COMMAND_DATA.description);
 
-const needsToBeInSameVoiceChannel = true;
-
+const executeOpts: BaseExecuteOptions = {
+  needsToBeInSameVoiceChannel: true
+};
 export {
   data,
   skipCommand as execute,
   COMMAND_DATA as command,
   skipCommand as executeAsText,
-  needsToBeInSameVoiceChannel
+  executeOpts
 };

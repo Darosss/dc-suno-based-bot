@@ -1,7 +1,7 @@
 import { ChannelType, Message, SlashCommandBuilder } from "discord.js";
 import { COMMANDS } from "./commands-list";
 
-import { MessageInteractionTypes } from "../types";
+import { BaseExecuteOptions, MessageInteractionTypes } from "../types";
 import { ConfigsType } from "@/utils/configs.utils";
 import ConfigsHandler from "@/utils/configs.utils";
 
@@ -60,9 +60,6 @@ const getMessageOfChangedConfigs = (config: Partial<ConfigsType>) =>
     .join("\n");
 
 const configsCommand = (message: Message) => {
-  if (message.member?.id !== process.env.OWNER_ID)
-    return message.reply("Only owner can do this (for now) ");
-
   return message.reply(
     "Yoo. Use slash command instead. Not working in text command(for now)"
   );
@@ -243,12 +240,14 @@ const data = new SlashCommandBuilder()
       )
   );
 
-const needsToBeInSameVoiceChannel = true;
-
+const executeOpts: BaseExecuteOptions = {
+  needsToBeInSameVoiceChannel: true,
+  onlyOwner: true
+};
 export {
   data,
   slashConfigsCommands as execute,
   COMMAND_DATA as command,
   configsCommand as executeAsText,
-  needsToBeInSameVoiceChannel
+  executeOpts
 };

@@ -5,7 +5,11 @@ import { getMp3FromMusicFolder } from "@/utils/mp3.utils";
 import { MUSIC_FOLDER } from "@/src/globals";
 import { removeCommandNameFromMessage } from "@/utils/dc.utils";
 import { GuildMember, Message, SlashCommandBuilder } from "discord.js";
-import { MessageCommandType, MessageInteractionTypes } from "../types";
+import {
+  BaseExecuteOptions,
+  MessageCommandType,
+  MessageInteractionTypes
+} from "../types";
 
 type FindByNameReturnType = {
   message: string;
@@ -71,6 +75,7 @@ const playCommandLogic = async (
   const messageMemberGuildMember = message.member as GuildMember;
   const channel = messageMemberGuildMember?.voice.channel;
   if (!channel) {
+    //TODO: i leave this for now here...
     return "You need to join a voice channel first!";
   }
   if (songToPlayName) {
@@ -109,12 +114,13 @@ const data = new SlashCommandBuilder()
   )
   .setDescription(COMMAND_DATA.description);
 
-const needsToBeInSameVoiceChannel = true;
-
+const executeOpts: BaseExecuteOptions = {
+  needsToBeInSameVoiceChannel: true
+};
 export {
   data,
   slashPlayCommand as execute,
   COMMAND_DATA as command,
   playCommand as executeAsText,
-  needsToBeInSameVoiceChannel
+  executeOpts
 };

@@ -20,18 +20,20 @@ type SlashCommandExecute = (message: MessageInteractionTypes) => unknown;
 
 type ButtonInteractionExecute = (interaction: ButtonInteraction) => unknown;
 
-type ClientTextCommandCollectionData = {
-  execute: CommandExecuteAsText;
+export type BaseExecuteOptions = {
   needsToBeInSameVoiceChannel?: boolean;
+  onlyOwner?: boolean;
 };
-type ClientSlashCommandCollectionData = {
-  execute: SlashCommandExecute;
-  needsToBeInSameVoiceChannel?: boolean;
+
+export type CollectionData<ExecuteType> = {
+  execute: ExecuteType;
+  executeOpts?: BaseExecuteOptions;
 };
-type ClientButtonInteractionCollectionData = {
-  execute: ButtonInteractionExecute;
-  needsToBeInSameVoiceChannel?: boolean;
-};
+
+type ClientTextCommandCollectionData = CollectionData<CommandExecuteAsText>;
+type ClientSlashCommandCollectionData = CollectionData<SlashCommandExecute>;
+type ClientButtonInteractionCollectionData =
+  CollectionData<ButtonInteractionExecute>;
 
 export type ClientWithCommands = Client & {
   commands: Collection<string, ClientSlashCommandCollectionData>;
@@ -44,7 +46,7 @@ export type BaseCommandReturnType = {
   execute: SlashCommandExecute;
   command: CommandsType;
   executeAsText: CommandExecuteAsText;
-  needsToBeInSameVoiceChannel?: boolean;
+  executeOpts?: BaseExecuteOptions;
 };
 
 export type BaseButtonInteractionReturnType = BaseCommandReturnType & {

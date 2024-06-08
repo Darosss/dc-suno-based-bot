@@ -1,16 +1,13 @@
 import PlayerQueue from "@/src/player-queue";
 import { Message, SlashCommandBuilder } from "discord.js";
 import { COMMANDS } from "./commands-list";
+import { BaseExecuteOptions } from "../types";
 const COMMAND_DATA = COMMANDS.stop;
 
 const stopCommand = (message: Message) => {
-  if (message.member?.id !== process.env.OWNER_ID)
-    return message.reply("Only owner can do this (for now) ");
-  else {
-    PlayerQueue.stop();
+  PlayerQueue.stop();
 
-    return message.reply("Player stopped!");
-  }
+  return message.reply("Player stopped!");
 };
 
 const data = new SlashCommandBuilder()
@@ -18,12 +15,14 @@ const data = new SlashCommandBuilder()
   .setDescription(COMMANDS.stop.description)
   .setDefaultMemberPermissions("0");
 
-const needsToBeInSameVoiceChannel = true;
-
+const executeOpts: BaseExecuteOptions = {
+  needsToBeInSameVoiceChannel: true,
+  onlyOwner: true
+};
 export {
   data,
   stopCommand as execute,
   COMMAND_DATA as command,
   stopCommand as executeAsText,
-  needsToBeInSameVoiceChannel
+  executeOpts
 };

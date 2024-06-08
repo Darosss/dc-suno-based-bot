@@ -11,6 +11,7 @@ import {
   ButtonStyle
 } from "discord.js";
 import {
+  CollectionData,
   CurrentSongType,
   MessageCommandType,
   PlayerQueueItemType,
@@ -19,6 +20,11 @@ import {
 import ConfigsHandler from "@/utils/configs.utils";
 
 export const componentInteractionSeparator = ":";
+
+export type CheckExecuteOptionsReturnType = {
+  canExecute: boolean;
+  message?: string;
+};
 
 export enum ComponentInteractionName {
   YT_PLAY = `yt-play`
@@ -32,7 +38,7 @@ export const removeCommandNameFromMessage = (
     .slice(process.env.COMMANDS_PREFIX.length + command.name.length)
     .trim();
 
-export const canUserUseCommands = (message: MessageCommandType) => {
+export const isBotAndUserInSameChannel = (message: MessageCommandType) => {
   if (client.voice.adapters.size === 0) return true;
 
   const canUse = message.guild?.channels.cache.some((channel) => {
@@ -46,7 +52,6 @@ export const canUserUseCommands = (message: MessageCommandType) => {
       return true;
   });
 
-  if (!canUse) message.reply("You are not in the same voice channel as me");
   return canUse;
 };
 
@@ -129,4 +134,42 @@ export const createSongYTChooseEmbed = (data: SongYTBaseData[]) => {
   );
 
   return { embed, buttons };
+};
+
+const checkIfUserIsInVoiceChannel = (member: GuildMember) => {
+  const channel = member.voice.channel;
+  if (channel) return true;
+};
+
+export const checkExecuteOptions = (
+  executeOpts: CollectionData<unknown>["executeOpts"],
+  message: MessageCommandType
+): CheckExecuteOptionsReturnType => {
+  if (!executeOpts) return { canExecute: true };
+  else if (
+    executeOpts.needsToBeInSameVoiceChannel &&
+    !checkIfUserIsInVoiceChannel(message.member as GuildMember)
+  ) {
+    return {
+      canExecute: false,
+      message: "You need to join the channel to do that"
+    };
+  } else if (
+    executeOpts.needsToBeInSameVoiceChannel &&
+    !isBotAndUserInSameChannel(message)
+  ) {
+    return {
+      canExecute: false,
+      message: "You are not in the same voice channel as me"
+    };
+  } else if (
+    executeOpts.onlyOwner &&
+    (message.member as GuildMember).id !== process.env.OWNER_ID
+  ) {
+    return {
+      canExecute: false,
+      message: "Only owner can do the command. sorry"
+    };
+  }
+  return { canExecute: true };
 };

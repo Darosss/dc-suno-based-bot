@@ -2,7 +2,7 @@ import { downloadMP3 } from "../download-logic";
 import { COMMANDS } from "./commands-list";
 import { MUSIC_FOLDER } from "../globals";
 import { Message, SlashCommandBuilder } from "discord.js";
-import { MessageInteractionTypes } from "../types";
+import { BaseExecuteOptions, MessageInteractionTypes } from "../types";
 import { removeCommandNameFromMessage } from "../utils/dc.utils";
 import ConfigsHandler from "@/src/utils/configs.utils";
 
@@ -67,12 +67,14 @@ const data = new SlashCommandBuilder()
   )
   .setDescription(COMMAND_DATA.description);
 
-const needsToBeInSameVoiceChannel = true;
+const executeOpts: BaseExecuteOptions = {
+  needsToBeInSameVoiceChannel: true
+};
 
 export {
   data,
   slashCommandAddMultipleSongs as execute,
   COMMAND_DATA as command,
   addMultipleSongs as executeAsText,
-  needsToBeInSameVoiceChannel
+  executeOpts
 };

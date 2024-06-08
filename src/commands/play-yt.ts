@@ -16,7 +16,11 @@ import ytdl, { getInfo } from "ytdl-core";
 import ConfigsHandler from "@/utils/configs.utils";
 import { downloadYtMp3 } from "@/src/download-logic";
 import { MUSIC_FOLDER } from "@/src/globals";
-import { MessageInteractionTypes, SongYTBaseData } from "@/src/types";
+import {
+  BaseExecuteOptions,
+  MessageInteractionTypes,
+  SongYTBaseData
+} from "@/src/types";
 import yts from "yt-search";
 
 const COMMAND_DATA = COMMANDS["yt play"];
@@ -99,6 +103,7 @@ export const playYtCommandLogic = async (
     const messageMemberGuildMember = member as GuildMember;
     const channel = messageMemberGuildMember?.voice.channel;
     if (!channel) {
+      //TODO: i leave this for now here...
       return "You need to join a voice channel first!";
     }
     if (songName) {
@@ -138,14 +143,15 @@ const data = new SlashCommandBuilder()
       .setDescription("Provide song url or search name")
   );
 
-const needsToBeInSameVoiceChannel = true;
-
+const executeOpts: BaseExecuteOptions = {
+  needsToBeInSameVoiceChannel: true
+};
 export {
   data,
   slashPlayYtCommand as execute,
   COMMAND_DATA as command,
   playYtCommand as executeAsText,
-  needsToBeInSameVoiceChannel,
   BUTTON_CUSTOM_ID_PREFIX as buttonInterractionCustomIdPrefix,
-  executeAsButton
+  executeAsButton,
+  executeOpts
 };

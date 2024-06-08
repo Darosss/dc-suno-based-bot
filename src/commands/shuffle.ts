@@ -1,13 +1,11 @@
 import { Message, SlashCommandBuilder } from "discord.js";
 import { COMMANDS } from "./commands-list";
 import playerQueue from "../player-queue";
+import { BaseExecuteOptions } from "../types";
 
 const COMMAND_DATA = COMMANDS.shuffle;
 
 const shuffleCommand = (message: Message) => {
-  if (message.member?.id !== process.env.OWNER_ID)
-    return message.reply("Only owner can do this (for now) ");
-
   if (playerQueue.isEmpty())
     return message.reply("No songs to shuffle. Add some");
 
@@ -22,12 +20,14 @@ const data = new SlashCommandBuilder()
   .setDescription(COMMAND_DATA.description)
   .setDefaultMemberPermissions("0");
 
-const needsToBeInSameVoiceChannel = true;
-
+const executeOpts: BaseExecuteOptions = {
+  needsToBeInSameVoiceChannel: true,
+  onlyOwner: true
+};
 export {
   data,
   shuffleCommand as execute,
   COMMAND_DATA as command,
   shuffleCommand as executeAsText,
-  needsToBeInSameVoiceChannel
+  executeOpts
 };

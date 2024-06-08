@@ -4,7 +4,7 @@ import { loadSlashCommands } from "./load-slash-commands";
 import { ClientWithCommands } from "./types";
 import { loadTextCommands } from "./load-text-commands";
 import {
-  canUserUseCommands,
+  checkExecuteOptions,
   componentInteractionSeparator
 } from "./utils/dc.utils";
 import { loadButtonInteractions } from "./load-button-interactions";
@@ -62,13 +62,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
     }
 
     try {
-      if (
-        command.needsToBeInSameVoiceChannel &&
-        !canUserUseCommands(interaction)
-      )
-        return;
+      const { canExecute, message } = checkExecuteOptions(
+        command.executeOpts,
+        interaction
+      );
 
-      await command.execute(interaction);
+      if (canExecute) return await command.execute(interaction);
+
+      return interaction.reply(message || "Something went wrong. Sorry");
     } catch (error) {
       console.error(error);
       if (interaction.replied || interaction.deferred) {
@@ -103,13 +104,14 @@ client.on(Events.MessageCreate, async (dcMessage) => {
     if (messageContentWithoutPrefix.startsWith(currentKey)) {
       const txtCommandData = client.textCommands.get(currentKey)!;
 
-      if (
-        txtCommandData.needsToBeInSameVoiceChannel &&
-        !canUserUseCommands(dcMessage)
-      )
-        return;
+      const { canExecute, message } = checkExecuteOptions(
+        txtCommandData.executeOpts,
+        dcMessage
+      );
 
-      await txtCommandData.execute(dcMessage);
+      if (canExecute) return await txtCommandData.execute(dcMessage);
+
+      return dcMessage.reply(message || "Something went wrong. Sorry");
     }
   }
 });

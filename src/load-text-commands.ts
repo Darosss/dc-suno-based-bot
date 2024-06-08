@@ -16,7 +16,7 @@ export const loadTextCommands = async (client: ClientWithCommands) => {
 
       client.textCommands.set(commandAsserted.command.name, {
         execute: commandAsserted.executeAsText,
-        needsToBeInSameVoiceChannel: commandAsserted.needsToBeInSameVoiceChannel
+        executeOpts: commandAsserted.executeOpts
       });
       console.log(`Added ${commandAsserted.command.name}`);
     } else {

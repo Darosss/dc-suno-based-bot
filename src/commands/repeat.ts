@@ -1,13 +1,11 @@
 import { Message, SlashCommandBuilder } from "discord.js";
 import { COMMANDS } from "./commands-list";
 import playerQueue from "../player-queue";
+import { BaseExecuteOptions } from "../types";
 
 const COMMAND_DATA = COMMANDS.repeat;
 
 const shuffleCommand = (message: Message) => {
-  if (message.member?.id !== process.env.OWNER_ID)
-    return message.reply("Only owner can do this (for now) ");
-
   playerQueue.setRepeat(!playerQueue.getRepeat());
 
   return message.reply(`Repeat is: ${playerQueue.getRepeat()}`);
@@ -18,12 +16,14 @@ const data = new SlashCommandBuilder()
   .setDescription(COMMAND_DATA.description)
   .setDefaultMemberPermissions("0");
 
-const needsToBeInSameVoiceChannel = true;
-
+const executeOpts: BaseExecuteOptions = {
+  needsToBeInSameVoiceChannel: true,
+  onlyOwner: true
+};
 export {
   data,
   shuffleCommand as execute,
   COMMAND_DATA as command,
   shuffleCommand as executeAsText,
-  needsToBeInSameVoiceChannel
+  executeOpts
 };

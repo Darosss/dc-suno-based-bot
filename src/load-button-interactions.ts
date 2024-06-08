@@ -22,8 +22,7 @@ export const loadButtonInteractions = async (client: ClientWithCommands) => {
         interractionsDataAsserted.buttonInterractionCustomIdPrefix,
         {
           execute: interractionsDataAsserted.executeAsButton,
-          needsToBeInSameVoiceChannel:
-            interractionsDataAsserted.needsToBeInSameVoiceChannel
+          executeOpts: interractionsDataAsserted.executeOpts
         }
       );
       console.log(

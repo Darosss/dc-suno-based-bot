@@ -183,7 +183,7 @@ class PlayerQueue {
     if (!this.statusData) return;
 
     await this.statusData.message.edit({
-      embeds: [createSongEmbed(this.currentSong, this.peek())]
+      embeds: [createSongEmbed(this.currentSong, this.repeat, this.peek())]
     });
   }
 
@@ -196,14 +196,14 @@ class PlayerQueue {
       return console.log("Status channel does not exist");
 
     const statusMessageInst = await statusChannel.send({
-      embeds: [createSongEmbed(this.currentSong, this.peek())]
+      embeds: [createSongEmbed(this.currentSong, this.repeat, this.peek())]
     });
 
     this.statusData = {
       message: statusMessageInst,
       interval: setInterval(() => {
         statusMessageInst.edit({
-          embeds: [createSongEmbed(this.currentSong, this.peek())]
+          embeds: [createSongEmbed(this.currentSong, this.repeat, this.peek())]
         });
       }, ConfigsHandler.getConfigs().playerStatusUpdateMs)
     };

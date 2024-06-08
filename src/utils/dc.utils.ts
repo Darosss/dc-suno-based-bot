@@ -63,6 +63,7 @@ export const isDcMessage = (
 
 export const createSongEmbed = (
   data: CurrentSongType | null,
+  repeat: boolean,
   nextSongData: PlayerQueueItemType | void
 ) => {
   const { duration, resource, name, requester } = data || {
@@ -88,6 +89,10 @@ export const createSongEmbed = (
           ? `${nextSongData.name} by <@${nextSongData.requester}>`
           : "-",
         inline: true
+      },
+      {
+        name: "Repeat playlist",
+        value: repeat ? "On" : "Off"
       },
       {
         name: "Progress",

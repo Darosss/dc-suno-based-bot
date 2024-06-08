@@ -12,6 +12,7 @@ export type COMMANDS_NAMES =
   | "songs"
   | "shuffle"
   | "repeat"
+  | "configs"
   | "edit configs";
 
 export type CommandsType = {
@@ -54,6 +55,10 @@ export const COMMANDS: Record<COMMANDS_NAMES, CommandsType> = {
   "edit configs": {
     name: "edit configs",
     description: "Change my configs"
+  },
+  configs: {
+    name: "configs",
+    description: "Show current bot configs"
   }
 };
 

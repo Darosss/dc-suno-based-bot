@@ -1,9 +1,8 @@
-import { downloadMP3 } from "../download-logic";
+import DownloadMp3Handler from "@/utils/download-logic.utils";
 import { COMMANDS } from "./commands-list";
-import { MUSIC_FOLDER } from "../globals";
 import { Message, SlashCommandBuilder } from "discord.js";
 import { BaseExecuteOptions, MessageInteractionTypes } from "../types";
-import { removeCommandNameFromMessage } from "../utils/dc.utils";
+import { removeCommandNameFromMessage } from "@/utils/dc.utils";
 import ConfigsHandler from "@/src/utils/configs.utils";
 
 const COMMAND_DATA = COMMANDS["add many songs"];
@@ -48,9 +47,8 @@ const addMultipleSongsLogic = async (songsUrls: string): Promise<string> => {
 
   const messagesToSend = [];
   for await (const songUrl of songsUrlSplittedUnique) {
-    const { message: downloadMessage } = await downloadMP3(
-      songUrl.trim(),
-      MUSIC_FOLDER
+    const { message: downloadMessage } = await DownloadMp3Handler.downloadMP3(
+      songUrl.trim()
     );
     messagesToSend.push(downloadMessage);
   }

@@ -1,8 +1,7 @@
-import { downloadMP3 } from "@/src/download-logic";
+import DownloadMp3Handler from "@/utils/download-logic.utils";
 import { COMMANDS } from "./commands-list";
 import PlayerQueue from "@/src/player-queue";
 import { getMp3FromMusicFolder } from "@/utils/mp3.utils";
-import { MUSIC_FOLDER } from "@/src/globals";
 import { removeCommandNameFromMessage } from "@/utils/dc.utils";
 import { GuildMember, Message, SlashCommandBuilder } from "discord.js";
 import {
@@ -54,7 +53,7 @@ const playCommandLogic = async (
   let songToPlayName = "";
   if (!songUrlOrName) return "Add either the URL or the name of the song.";
   else if (!songUrlOrName.includes("https://suno.com/song/")) {
-    const findByNameData = findByName(songUrlOrName);
+    const findByNameData = await findByName(songUrlOrName);
     if (!findByNameData.fileName) return findByNameData.message;
 
     songToPlayName = findByNameData.fileName;
@@ -65,10 +64,8 @@ const playCommandLogic = async (
       return baseWrongMessageReply;
     }
 
-    const { message: downloadMessage, fileName } = await downloadMP3(
-      songUrlOrName,
-      MUSIC_FOLDER
-    );
+    const { message: downloadMessage, fileName } =
+      await DownloadMp3Handler.downloadMP3(songUrlOrName);
     if (!fileName) return downloadMessage;
     songToPlayName = fileName;
   }
@@ -91,8 +88,8 @@ const playCommandLogic = async (
   }
 };
 
-const findByName = (songName: string): FindByNameReturnType => {
-  const files = getMp3FromMusicFolder();
+const findByName = async (songName: string): Promise<FindByNameReturnType> => {
+  const files = await getMp3FromMusicFolder();
   const foundName = files.find((name) =>
     name.toLowerCase().includes(songName.trim().toLowerCase())
   );

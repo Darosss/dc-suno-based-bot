@@ -14,7 +14,7 @@ import {
 } from "@/utils/dc.utils";
 import ytdl, { getInfo } from "ytdl-core";
 import ConfigsHandler from "@/utils/configs.utils";
-import { downloadYtMp3 } from "@/src/download-logic";
+import DownloadMp3Handler from "@/utils/download-logic.utils";
 import { MUSIC_FOLDER } from "@/src/globals";
 import {
   BaseExecuteOptions,
@@ -99,7 +99,11 @@ export const playYtCommandLogic = async (
       return `The song has lower views than expected. Your song: \`${videoDetails.viewCount}\` Min views: \`${configs.ytPlayerMinViews}\``;
     }
 
-    const songName = await downloadYtMp3(stream, videoDetails, MUSIC_FOLDER);
+    const songName = await DownloadMp3Handler.downloadYtMp3(
+      stream,
+      videoDetails,
+      MUSIC_FOLDER
+    );
     const messageMemberGuildMember = member as GuildMember;
     const channel = messageMemberGuildMember?.voice.channel;
     if (!channel) {

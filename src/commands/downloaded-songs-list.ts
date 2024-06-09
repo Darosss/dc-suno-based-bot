@@ -21,7 +21,7 @@ const downloadedSongsListCommand = async (message: MessageCommandType) => {
 };
 
 const sendPossibleFilesAsPrivMessage = async () => {
-  const files = getMp3FromMusicFolder();
+  const files = await getMp3FromMusicFolder();
   if (files.length <= 0) return;
   const mp3NamesTxt = await saveMp3ListToFile(files);
   const attachment = new AttachmentBuilder(mp3NamesTxt);

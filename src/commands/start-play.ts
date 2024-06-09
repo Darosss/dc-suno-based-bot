@@ -13,12 +13,12 @@ import ConfigsHandler from "@/src/utils/configs.utils";
 const SLASH_COMMAND_OPTION_SONG_COUNT = "songs-count";
 const COMMAND_DATA = COMMANDS.radio;
 
-const startPlayCommand = (message: Message) => {
+const startPlayCommand = async (message: Message) => {
   const numberOfSongs =
     Number(removeCommandNameFromMessage(message.content, COMMAND_DATA)) ||
     ConfigsHandler.getConfigs().maxRadioSongs;
 
-  const returnMessage = startPlayCommandLogic(message, numberOfSongs);
+  const returnMessage = await startPlayCommandLogic(message, numberOfSongs);
 
   return message.reply(returnMessage);
 };
@@ -29,18 +29,18 @@ const slashStartPlayCommand = async (message: MessageInteractionTypes) => {
   )?.value;
 
   await message.reply("Trying to set radio on");
-  const returnMessage = startPlayCommandLogic(
+  const returnMessage = await startPlayCommandLogic(
     message,
     (songsCount as number) || ConfigsHandler.getConfigs().maxRadioSongs
   );
   return await message.editReply(returnMessage);
 };
 
-const startPlayCommandLogic = (
+const startPlayCommandLogic = async (
   message: MessageCommandType,
   numberOfSongs: number
-): string => {
-  const files = getMp3FromMusicFolder().sort(() => 0.5 - Math.random());
+): Promise<string> => {
+  const files = (await getMp3FromMusicFolder()).sort(() => 0.5 - Math.random());
   const maxRadioSongs = ConfigsHandler.getConfigs().maxRadioSongs;
   const maxSongs =
     numberOfSongs > maxRadioSongs

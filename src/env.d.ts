@@ -10,6 +10,7 @@ declare global {
       BOT_COMMANDS_CHANNEL_ID: string;
       BOT_STATUS_CHANNEL_ID: string;
       MUSIC_FOLDER_MAX_MB: string;
+      FFPROBE_PATH?: string;
     }
   }
 }

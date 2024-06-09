@@ -5,7 +5,7 @@ import path from "path";
 import getAudioDurationInSeconds from "get-audio-duration";
 
 export const getMp3Duration = async (mp3FilePath: string): Promise<number> => {
-  return await getAudioDurationInSeconds(mp3FilePath);
+  return await getAudioDurationInSeconds(mp3FilePath, process.env.FFPROBE_PATH);
 };
 export const getMp3FromMusicFolder = async () =>
   (await fs.promises.readdir(MUSIC_FOLDER, { encoding: "utf-8" })).filter(

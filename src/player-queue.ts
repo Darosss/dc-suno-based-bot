@@ -9,7 +9,7 @@ import {
 import { MUSIC_FOLDER } from "@/src/globals";
 import { getMp3Duration } from "@/utils/mp3.utils";
 import path from "path";
-import { Message, VoiceBasedChannel } from "discord.js";
+import { DiscordAPIError, Message, VoiceBasedChannel } from "discord.js";
 import { CurrentSongType, PlayerQueueItemType } from "./types";
 import { client } from "./init-bot";
 import { createSongEmbed, getBotCommandsChannel } from "@/src/utils/dc.utils";
@@ -207,13 +207,29 @@ class PlayerQueue {
       embeds: [this.createSongEmbeedHelper()]
     });
 
-    this.statusData = {
-      message: statusMessageInst,
-      interval: setInterval(() => {
-        statusMessageInst.edit({
+    const statusDataInterval = setInterval(async () => {
+      try {
+        await statusMessageInst.edit({
           embeds: [this.createSongEmbeedHelper()]
         });
-      }, ConfigsHandler.getConfigs().playerStatusUpdateMs)
+      } catch (err: unknown) {
+        if (err instanceof DiscordAPIError) {
+          console.log("Probably someone deleted status message ->", {
+            code: err.code,
+            message: err.message
+          });
+          this.clearStatusPlayer();
+          this.executeStatusPlayer();
+        } else {
+          console.log(err);
+          throw err;
+        }
+      }
+    }, ConfigsHandler.getConfigs().playerStatusUpdateMs);
+
+    this.statusData = {
+      message: statusMessageInst,
+      interval: statusDataInterval
     };
   }
 

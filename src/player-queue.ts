@@ -158,6 +158,7 @@ class PlayerQueue {
     this.clearPlayTimeout();
     this.audioPlayer?.stop();
     this.items = [];
+    this.currentSong = null;
     this.clearStatusPlayer();
   }
 

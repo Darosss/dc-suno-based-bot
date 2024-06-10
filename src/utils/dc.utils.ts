@@ -8,18 +8,26 @@ import {
   Message,
   ActionRowBuilder,
   ButtonBuilder,
-  ButtonStyle
+  ButtonStyle,
+  hyperlink
 } from "discord.js";
 import {
   CollectionData,
   CurrentSongType,
   MessageCommandType,
   PlayerQueueItemType,
-  SongYTBaseData
+  SongYTBaseData,
+  StoredSongData
 } from "../types";
 import ConfigsHandler from "@/utils/configs.utils";
+import { SongNamesAffixesEnum } from "@/src/enums";
 
 export const componentInteractionSeparator = ":";
+
+enum SitesPrefixUrlsEnum {
+  youtube = `https://youtube.com/watch?v=`,
+  suno = `https://suno.com/song/`
+}
 
 export type CheckExecuteOptionsReturnType = {
   canExecute: boolean;
@@ -61,15 +69,38 @@ export const isDcMessage = (
   return (message as Message).author !== undefined;
 };
 
+const getSongUrlBasedOnSite = (songId: string, site: SongNamesAffixesEnum) => {
+  switch (site) {
+    case SongNamesAffixesEnum.youtube:
+      return SitesPrefixUrlsEnum.youtube + songId;
+
+    case SongNamesAffixesEnum.suno:
+      return SitesPrefixUrlsEnum.suno + songId;
+  }
+};
+
+const createSongHyperlink = (songData: StoredSongData) => {
+  return hyperlink(
+    "Song link",
+    getSongUrlBasedOnSite(songData.id, songData.site),
+    songData.name
+  );
+};
+
 export const createSongEmbed = (
   data: CurrentSongType | null,
   repeat: boolean,
   nextSongData: PlayerQueueItemType[] | void
 ) => {
-  const { duration, resource, name, requester } = data || {
+  const { duration, resource, songData, requester } = data || {
     currentTime: 0,
     duration: 0,
-    name: "-",
+    songData: {
+      fileName: "-",
+      id: "-",
+      name: "-",
+      site: SongNamesAffixesEnum.suno
+    },
     requester: "",
     resource: { playbackDuration: 0 }
   };
@@ -81,7 +112,11 @@ export const createSongEmbed = (
     .setColor("Random")
     .setThumbnail(client.user?.avatarURL({ size: 64 }) || null)
     .addFields(
-      { name: "Name", value: `${name}`, inline: true },
+      {
+        name: "Name",
+        value: `${songData.fileName}\n${createSongHyperlink(songData)}`,
+        inline: true
+      },
       {
         name: "Requested by",
         value: requester ? `<@${requester}>` : "-",
@@ -93,8 +128,8 @@ export const createSongEmbed = (
           nextSongData && nextSongData.length > 0
             ? nextSongData
                 .map(
-                  (songData, index) =>
-                    `${index + 1}. ${songData.name} by <@${songData.requester}>`
+                  (nextSong, index) =>
+                    `${index + 1}. ${nextSong.songData.name} by <@${nextSong.requester}> - ${createSongHyperlink(nextSong.songData)}`
                 )
                 .join("\n--------------------------\n")
             : "-",

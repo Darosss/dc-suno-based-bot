@@ -12,7 +12,7 @@ const shuffleCommand = (message: Message) => {
   playerQueue.shuffle();
 
   return message.reply(`Successfully shuffled'n
-  Next song: \`${playerQueue.peek()?.name}\``);
+  Next song: \`${playerQueue.peek()?.songData.name}\``);
 };
 
 const data = new SlashCommandBuilder()

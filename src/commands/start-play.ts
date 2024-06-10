@@ -53,7 +53,7 @@ const startPlayCommandLogic = async (
 
   for (let songIndex = 0; songIndex < maxSongs; songIndex++) {
     PlayerQueue.enqueue({
-      name: files[songIndex],
+      songData: files[songIndex],
       requester: messageMemberGuildMember.id
     });
   }

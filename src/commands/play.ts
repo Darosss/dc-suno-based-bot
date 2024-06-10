@@ -7,12 +7,13 @@ import { GuildMember, Message, SlashCommandBuilder } from "discord.js";
 import {
   BaseExecuteOptions,
   MessageCommandType,
-  MessageInteractionTypes
+  MessageInteractionTypes,
+  StoredSongData
 } from "../types";
 
 type FindByNameReturnType = {
   message: string;
-  fileName?: string;
+  fileName?: StoredSongData;
 };
 
 const COMMAND_DATA = COMMANDS.play;
@@ -50,7 +51,7 @@ const playCommandLogic = async (
   songUrlOrName: string,
   message: MessageCommandType
 ): Promise<string> => {
-  let songToPlayName = "";
+  let songToPlayName: StoredSongData;
   if (!songUrlOrName) return "Add either the URL or the name of the song.";
   else if (!songUrlOrName.includes("https://suno.com/song/")) {
     const findByNameData = await findByName(songUrlOrName);
@@ -64,10 +65,10 @@ const playCommandLogic = async (
       return baseWrongMessageReply;
     }
 
-    const { message: downloadMessage, fileName } =
+    const { message: downloadMessage, fileData } =
       await DownloadMp3Handler.downloadMP3(songUrlOrName);
-    if (!fileName) return downloadMessage;
-    songToPlayName = fileName;
+    if (!fileData) return downloadMessage;
+    songToPlayName = fileData;
   }
   const messageMemberGuildMember = message.member as GuildMember;
   const channel = messageMemberGuildMember?.voice.channel;
@@ -78,11 +79,11 @@ const playCommandLogic = async (
   if (songToPlayName) {
     PlayerQueue.setConnection(channel).then(() => {
       PlayerQueue.enqueue(
-        { name: songToPlayName, requester: messageMemberGuildMember.id },
+        { songData: songToPlayName, requester: messageMemberGuildMember.id },
         { resume: true }
       );
     });
-    return `Added ${songToPlayName}`;
+    return `Added ${songToPlayName.name}`;
   } else {
     return "Something wen't wrong ";
   }
@@ -90,8 +91,8 @@ const playCommandLogic = async (
 
 const findByName = async (songName: string): Promise<FindByNameReturnType> => {
   const files = await getMp3FromMusicFolder();
-  const foundName = files.find((name) =>
-    name.toLowerCase().includes(songName.trim().toLowerCase())
+  const foundName = files.find((songData) =>
+    songData.fileName.toLowerCase().includes(songName.trim().toLowerCase())
   );
   if (!foundName) {
     return {

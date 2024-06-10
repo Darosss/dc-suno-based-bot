@@ -114,13 +114,13 @@ export const playYtCommandLogic = async (
       PlayerQueue.setConnection(channel).then(() => {
         PlayerQueue.enqueue(
           {
-            name: songName,
+            songData: songName,
             requester: messageMemberGuildMember.id
           },
           { resume: true }
         );
       });
-      return `Added ${songName}`;
+      return `Added ${songName.name}`;
     } else {
       return "Something went wrong ";
     }

@@ -39,7 +39,7 @@ class PlayerQueue {
   public async enqueue(item: PlayerQueueItemType, options?: EnqueueOptions) {
     const { resume } = options || {};
     this.items.push(item);
-    console.log(`Item ${item.name} by ${item.requester} inserted`);
+    console.log(`Item ${item.songData.fileName} by ${item.requester} inserted`);
     if (resume && this.currentSong === null) {
       await this.start();
     }
@@ -85,7 +85,7 @@ class PlayerQueue {
 
   public setRepeat(enabled: boolean) {
     this.repeat = enabled;
-    if (this.currentSong?.name) this.items.push(this.currentSong);
+    if (this.currentSong?.songData.name) this.items.push(this.currentSong);
   }
 
   public async setConnection(channel: VoiceBasedChannel) {
@@ -121,10 +121,10 @@ class PlayerQueue {
 
     try {
       const firstSong = this.dequeue();
-      if (!firstSong || !firstSong.name)
+      if (!firstSong || !firstSong.songData.name)
         //Needed to add !firstSong.name -> in case sth went wrong
         return console.error("No current song to play");
-      const songPath = path.join(MUSIC_FOLDER, firstSong.name);
+      const songPath = path.join(MUSIC_FOLDER, firstSong.songData.fileName);
 
       if (!isFileAccesilbe(songPath)) {
         console.log("No file found, skip");

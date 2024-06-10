@@ -11,6 +11,7 @@ import {
 import { CommandsType } from "./commands/commands-list";
 import { AudioResource } from "@discordjs/voice";
 import { ComponentInteractionName } from "./utils/dc.utils";
+import { SongNamesAffixesEnum } from "./enums";
 
 export type TODO = any;
 
@@ -62,7 +63,7 @@ export type MessageInteractionTypes =
 export type MessageCommandType = Message | MessageInteractionTypes;
 
 export type PlayerQueueItemType = {
-  name: string;
+  songData: StoredSongData;
   requester: string;
 };
 
@@ -74,4 +75,11 @@ export type CurrentSongType = PlayerQueueItemType & {
 export type SongYTBaseData = {
   name: string;
   id: string;
+};
+
+export type StoredSongData = {
+  fileName: string;
+  name: string;
+  id: string;
+  site: SongNamesAffixesEnum;
 };

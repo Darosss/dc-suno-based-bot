@@ -1,13 +1,15 @@
 import { load as cherrioLoad } from "cheerio";
 import fs from "fs";
 import https from "https";
-import { MUSIC_FOLDER } from "../globals";
+import { MUSIC_FOLDER, SONG_DATA_SEPARATOR } from "../globals";
 import internal from "stream";
 import ytdl from "ytdl-core";
 import path from "path";
 import { isFileAccesilbe } from "./files.utils";
 import { getMp3FilesWithInfo, getMp3FolderDirectorySize } from "./mp3.utils";
 import sanitize from "sanitize-filename";
+import { SongNamesAffixesEnum } from "@/src/enums";
+import { StoredSongData } from "../types";
 
 type SongData = {
   fileNameTitle?: string;
@@ -16,7 +18,7 @@ type SongData = {
 
 type CommonReturnDownload = {
   message: string;
-  fileName?: string;
+  fileData?: StoredSongData;
 };
 
 (async () => {
@@ -78,9 +80,10 @@ class DownloadMp3Handler {
     streamYt: internal.Readable,
     videoDetails: ytdl.MoreVideoDetails,
     absoluteDownloadPath: string
-  ): Promise<string> {
+  ): Promise<StoredSongData> {
+    const titleSanitized = sanitize(videoDetails.title);
     const songName = sanitize(
-      `${videoDetails.title}-${videoDetails.videoId}.mp3`
+      `${titleSanitized}${SONG_DATA_SEPARATOR}${videoDetails.videoId}${SONG_DATA_SEPARATOR}${SongNamesAffixesEnum.youtube}.mp3`
     );
     const songPath = path.join(MUSIC_FOLDER, songName);
     if (!(await isFileAccesilbe(songPath))) {
@@ -94,14 +97,19 @@ class DownloadMp3Handler {
         await this.handleMaxMBMusicFolderLogic();
       });
     }
-    return songName;
+    return {
+      fileName: songName,
+      id: videoDetails.videoId,
+      name: titleSanitized,
+      site: SongNamesAffixesEnum.youtube
+    };
   }
 
   private async getMp3AndDownload(
     songData: SongData
   ): Promise<CommonReturnDownload> {
     const fileName = sanitize(
-      `${songData.fileNameTitle} - ${songData.songId}.mp3`
+      `${songData.fileNameTitle}${SONG_DATA_SEPARATOR}${songData.songId}${SONG_DATA_SEPARATOR}${SongNamesAffixesEnum.suno}.mp3`
     );
     const filePath = path.join(MUSIC_FOLDER, fileName);
     if (!fs.existsSync(filePath)) {
@@ -120,7 +128,12 @@ class DownloadMp3Handler {
 
               return resolve({
                 message: `File ${songData.fileNameTitle} downloaded.`,
-                fileName
+                fileData: {
+                  fileName,
+                  id: songData.songId,
+                  name: songData.fileNameTitle!,
+                  site: SongNamesAffixesEnum.suno
+                }
               });
             });
             stream.on("error", (err) => {
@@ -139,7 +152,15 @@ class DownloadMp3Handler {
           });
       });
     } else {
-      return { message: `${fileName} already exists.`, fileName };
+      return {
+        message: `${fileName} already exists.`,
+        fileData: {
+          fileName,
+          id: songData.songId,
+          name: songData.fileNameTitle!,
+          site: SongNamesAffixesEnum.suno
+        }
+      };
     }
   }
 
@@ -167,10 +188,10 @@ class DownloadMp3Handler {
             if (!songData.songId || !songData.fileNameTitle)
               return resolve({ message: "Song id or file name is wrong" });
             try {
-              const { message, fileName } =
+              const { message, fileData } =
                 await this.getMp3AndDownload(songData);
-              if (!fileName) return resolve({ message });
-              return resolve({ fileName, message: `Added ${fileName}` });
+              if (!fileData) return resolve({ message });
+              return resolve({ fileData, message: `Added ${fileData.name}` });
             } catch (error) {
               throw error;
             }

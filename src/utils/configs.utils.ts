@@ -1,6 +1,7 @@
 import fs from "fs";
 import { CONFIG_PATH } from "@/src/globals";
 import { isFileAccesilbe } from "./files.utils";
+import { updateClientStatus } from "./dc.utils";
 
 export type ConfigsType = {
   maxIdleTimeMs: number;
@@ -36,6 +37,8 @@ class ConfigsHandler {
       await fs.promises.writeFile(CONFIG_PATH, JSON.stringify(newConfigs));
 
       this.loadConfigs();
+
+      updateClientStatus();
       return true;
     } catch (err) {
       console.error("Something went wrong while editing configs");

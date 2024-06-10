@@ -1,4 +1,4 @@
-import { CommandsType } from "@/src/commands/commands-list";
+import { COMMANDS, CommandsType } from "@/src/commands/commands-list";
 import { client } from "../init-bot";
 import {
   ChannelType,
@@ -9,7 +9,8 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  hyperlink
+  hyperlink,
+  ActivityType
 } from "discord.js";
 import {
   CollectionData,
@@ -222,4 +223,24 @@ export const checkExecuteOptions = (
     };
   }
   return { canExecute: true };
+};
+
+export const updateClientStatus = () => {
+  let statusMessage = ``;
+
+  const commandsChannel = getBotCommandsChannel();
+  if (commandsChannel && "name" in commandsChannel)
+    statusMessage += `I listen in: #${commandsChannel.name} channel.\n`;
+
+  client.user?.setPresence({
+    activities: [
+      {
+        name:
+          statusMessage +
+          `Type: ${process.env.COMMANDS_PREFIX}${COMMANDS.commands.name} - for help`,
+        type: ActivityType.Custom,
+        state: ""
+      }
+    ]
+  });
 };

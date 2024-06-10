@@ -1,11 +1,11 @@
-import { ActivityType, Client, Events, GatewayIntentBits } from "discord.js";
-import { COMMANDS } from "./commands/commands-list";
+import { Client, Events, GatewayIntentBits } from "discord.js";
 import { loadSlashCommands } from "./load-slash-commands";
 import { ClientWithCommands } from "./types";
 import { loadTextCommands } from "./load-text-commands";
 import {
   checkExecuteOptions,
-  componentInteractionSeparator
+  componentInteractionSeparator,
+  updateClientStatus
 } from "./utils/dc.utils";
 import { loadButtonInteractions } from "./load-button-interactions";
 import ConfigsHandler from "./utils/configs.utils";
@@ -27,15 +27,7 @@ client.once("ready", () => {
   loadTextCommands(client);
   loadButtonInteractions(client);
 
-  client.user?.setPresence({
-    activities: [
-      {
-        name: `*${process.env.COMMANDS_PREFIX}${COMMANDS.commands.name}* for help`,
-        type: ActivityType.Custom,
-        state: ""
-      }
-    ]
-  });
+  updateClientStatus();
 });
 client.on(Events.InteractionCreate, async (interaction) => {
   if (interaction.isButton()) {

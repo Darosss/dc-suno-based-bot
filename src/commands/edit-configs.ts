@@ -241,7 +241,6 @@ const data = new SlashCommandBuilder()
   );
 
 const executeOpts: BaseExecuteOptions = {
-  needsToBeInSameVoiceChannel: true,
   onlyOwner: true
 };
 export {

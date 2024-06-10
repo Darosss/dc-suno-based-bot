@@ -115,8 +115,6 @@ class PlayerQueue {
   }
 
   async start(): Promise<void> {
-    await this.executeStatusPlayer();
-
     this.clearPlayTimeout();
 
     try {
@@ -144,7 +142,7 @@ class PlayerQueue {
           duration: (await getMp3Duration(songPath)) * 1000,
           resource
         };
-        this.updateStatusMessage();
+        await this.executeStatusPlayer();
       } catch (err) {
         console.error("Error:", err);
       }
@@ -188,13 +186,6 @@ class PlayerQueue {
       this.closeConnectionTimeout = null;
     }
   }
-  private async updateStatusMessage() {
-    if (!this.statusData) return;
-
-    await this.statusData.message.edit({
-      embeds: [this.createSongEmbeedHelper()]
-    });
-  }
 
   public async refreshStatusPlayerWithNewConfigs() {
     await this.clearStatusPlayer();
@@ -202,7 +193,7 @@ class PlayerQueue {
   }
 
   private async executeStatusPlayer() {
-    if (this.statusData) return;
+    if (this.statusData || !this.currentSong) return;
     const statusChannel = client.channels.cache.get(
       ConfigsHandler.getConfigs().botStatusChannelId
     );

@@ -73,9 +73,13 @@ export const createSongEmbed = (
     requester: "",
     resource: { playbackDuration: 0 }
   };
-
   const embed = new EmbedBuilder()
-    .setTitle("Now Playing")
+    .setTitle(`Now Playing`)
+    .setFooter({
+      text: `Refresh every: ${ConfigsHandler.getConfigs().playerStatusUpdateMs / 1000}s`
+    })
+    .setColor("Random")
+    .setThumbnail(client.user?.avatarURL({ size: 64 }) || null)
     .addFields(
       { name: "Name", value: `${name}`, inline: true },
       {

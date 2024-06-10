@@ -1,6 +1,11 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require("dotenv").config();
 import "module-alias/register";
+
+import EnvChecker from "./utils/env-checker.utils";
+
+new EnvChecker().init();
+
 import "./utils/configs.utils";
 
 import express from "express";

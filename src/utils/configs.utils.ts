@@ -2,6 +2,7 @@ import fs from "fs";
 import { CONFIG_PATH } from "@/src/globals";
 import { isFileAccesilbe } from "./files.utils";
 import { updateClientStatus } from "./dc.utils";
+import PlayerQueue from "../player-queue";
 
 export type ConfigsType = {
   maxIdleTimeMs: number;
@@ -39,6 +40,7 @@ class ConfigsHandler {
       this.loadConfigs();
 
       updateClientStatus();
+      PlayerQueue.refreshStatusPlayerWithNewConfigs();
       return true;
     } catch (err) {
       console.error("Something went wrong while editing configs");

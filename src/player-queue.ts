@@ -195,6 +195,11 @@ class PlayerQueue {
     });
   }
 
+  public async refreshStatusPlayerWithNewConfigs() {
+    await this.clearStatusPlayer();
+    this.executeStatusPlayer();
+  }
+
   private async executeStatusPlayer() {
     if (this.statusData) return;
     const statusChannel = client.channels.cache.get(
@@ -233,9 +238,12 @@ class PlayerQueue {
     };
   }
 
-  private clearStatusPlayer() {
+  private async clearStatusPlayer() {
     if (!this.statusData) return;
     clearInterval(this.statusData.interval);
+    this.statusData.message.deletable
+      ? await this.statusData.message.delete()
+      : null;
     this.statusData = null;
   }
 

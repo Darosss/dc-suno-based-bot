@@ -64,7 +64,7 @@ export const isDcMessage = (
 export const createSongEmbed = (
   data: CurrentSongType | null,
   repeat: boolean,
-  nextSongData: PlayerQueueItemType | void
+  nextSongData: PlayerQueueItemType[] | void
 ) => {
   const { duration, resource, name, requester } = data || {
     currentTime: 0,
@@ -85,9 +85,15 @@ export const createSongEmbed = (
       },
       {
         name: "Next",
-        value: nextSongData
-          ? `${nextSongData.name} by <@${nextSongData.requester}>`
-          : "-",
+        value:
+          nextSongData && nextSongData.length > 0
+            ? nextSongData
+                .map(
+                  (songData, index) =>
+                    `${index + 1}. ${songData.name} by <@${songData.requester}>`
+                )
+                .join("\n--------------------------\n")
+            : "-",
         inline: true
       },
       {

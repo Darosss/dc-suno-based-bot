@@ -173,6 +173,14 @@ class PlayerQueue {
     }
   }
 
+  private createSongEmbeedHelper() {
+    return createSongEmbed(
+      this.currentSong,
+      this.repeat,
+      this.items.slice(0, 4)
+    );
+  }
+
   private clearCloseConnectionTimeout() {
     if (this.closeConnectionTimeout) {
       clearTimeout(this.closeConnectionTimeout);
@@ -183,7 +191,7 @@ class PlayerQueue {
     if (!this.statusData) return;
 
     await this.statusData.message.edit({
-      embeds: [createSongEmbed(this.currentSong, this.repeat, this.peek())]
+      embeds: [this.createSongEmbeedHelper()]
     });
   }
 
@@ -196,14 +204,14 @@ class PlayerQueue {
       return console.log("Status channel does not exist");
 
     const statusMessageInst = await statusChannel.send({
-      embeds: [createSongEmbed(this.currentSong, this.repeat, this.peek())]
+      embeds: [this.createSongEmbeedHelper()]
     });
 
     this.statusData = {
       message: statusMessageInst,
       interval: setInterval(() => {
         statusMessageInst.edit({
-          embeds: [createSongEmbed(this.currentSong, this.repeat, this.peek())]
+          embeds: [this.createSongEmbeedHelper()]
         });
       }, ConfigsHandler.getConfigs().playerStatusUpdateMs)
     };

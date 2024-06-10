@@ -7,6 +7,8 @@ import ytdl from "ytdl-core";
 import path from "path";
 import { isFileAccesilbe } from "./files.utils";
 import { getMp3FilesWithInfo, getMp3FolderDirectorySize } from "./mp3.utils";
+import sanitize from "sanitize-filename";
+
 type SongData = {
   fileNameTitle?: string;
   songId: string;
@@ -77,7 +79,9 @@ class DownloadMp3Handler {
     videoDetails: ytdl.MoreVideoDetails,
     absoluteDownloadPath: string
   ): Promise<string> {
-    const songName = `${videoDetails.title}-${videoDetails.videoId}.mp3`;
+    const songName = sanitize(
+      `${videoDetails.title}-${videoDetails.videoId}.mp3`
+    );
     const songPath = path.join(MUSIC_FOLDER, songName);
     if (!(await isFileAccesilbe(songPath))) {
       const stream = fs.createWriteStream(
@@ -96,7 +100,9 @@ class DownloadMp3Handler {
   private async getMp3AndDownload(
     songData: SongData
   ): Promise<CommonReturnDownload> {
-    const fileName = `${songData.fileNameTitle} - ${songData.songId}.mp3`;
+    const fileName = sanitize(
+      `${songData.fileNameTitle} - ${songData.songId}.mp3`
+    );
     const filePath = path.join(MUSIC_FOLDER, fileName);
     if (!fs.existsSync(filePath)) {
       return new Promise((resolve, reject) => {

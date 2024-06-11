@@ -33,6 +33,9 @@ const playYtCommand = async (message: Message) => {
   if (!songUrl || !songUrl.includes(YOUTUBE_LINK)) {
     const data = await getYoutubeSearchByName(songUrl);
 
+    if (!data)
+      return await message.reply("Sorry. Not found what you looking for.");
+
     return await message.reply({
       embeds: [data.embed],
       components: [data.buttons]
@@ -57,7 +60,7 @@ const getYoutubeSearchByName = async (name: string, count = 5) => {
     .slice(0, count)
     .map<SongYTBaseData>((video) => ({ name: video.title, id: video.videoId }));
 
-  return createSongYTChooseEmbed(videos);
+  return videos.length > 0 ? createSongYTChooseEmbed(videos) : null;
 };
 
 const slashPlayYtCommand = async (message: MessageInteractionTypes) => {
@@ -66,6 +69,9 @@ const slashPlayYtCommand = async (message: MessageInteractionTypes) => {
 
   if (!songUrl || !songUrl.includes(YOUTUBE_LINK)) {
     const data = await getYoutubeSearchByName(songUrl);
+
+    if (!data)
+      return await message.reply("Sorry. Not found what you looking for.");
 
     return await message.reply({
       embeds: [data.embed],

@@ -1,7 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require("dotenv").config();
 import "module-alias/register";
-
 import EnvChecker from "./utils/env-checker.utils";
 
 new EnvChecker().init();
@@ -9,12 +8,13 @@ new EnvChecker().init();
 import "./utils/configs.utils";
 
 import express from "express";
+import { indexHTMLContent } from "./html-content/index.html";
 const app = express();
 
 app.use(express.static("public"));
 
 app.get("/", function (req, res) {
-  return res.send("Dc bot suno ai home page");
+  res.send(indexHTMLContent);
 });
 
 app.listen(process.env.SERVER_PORT, () => {

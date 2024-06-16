@@ -9,12 +9,17 @@ import "./utils/configs.utils";
 
 import express from "express";
 import { indexHTMLContent } from "./html-content/index.html";
+import ConfigsHandler from "./utils/configs.utils";
 const app = express();
 
 app.use(express.static("public"));
 
 app.get("/", function (req, res) {
   res.send(indexHTMLContent);
+});
+
+app.get("/options", function (req, res) {
+  res.send(ConfigsHandler.getConfigs());
 });
 
 app.listen(process.env.SERVER_PORT, () => {

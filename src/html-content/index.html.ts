@@ -16,6 +16,7 @@ export const indexHTMLContent = `<!doctype html>
     <div style='display:flex; justify-content:center; align-items:center; color:white;'>
       <div>
         <h1>Discord (suno | youtube) bot home site</h1>
+        <a href="/options"> Check current options </a> <br/>
         <sub>Nothing more here. You can manage me in discord only</sub>
       </div>
     </div>

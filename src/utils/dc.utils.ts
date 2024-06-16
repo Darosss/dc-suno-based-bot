@@ -263,7 +263,14 @@ export const handleBotConnectionToVoiceChannel = (
       message: "You need to join a voice channel first!"
     };
   }
-  if (channel.joinable) {
+  console.log(message.guild?.members.me?.permissionsIn(channel).has("Speak"));
+
+  if (!message.guild?.members.me?.permissionsIn(channel).has("Speak")) {
+    return {
+      success: false,
+      message: `I do not have permission to speak in ${channel.toString()} channel`
+    };
+  } else if (channel.joinable) {
     PlayerQueue.setConnection(channel);
     return { success: true };
   } else if (

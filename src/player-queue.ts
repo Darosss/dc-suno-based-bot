@@ -88,7 +88,7 @@ class PlayerQueue {
     if (this.currentSong?.songData.name) this.items.push(this.currentSong);
   }
 
-  public async setConnection(channel: VoiceBasedChannel) {
+  public setConnection(channel: VoiceBasedChannel) {
     if (this.connection) return;
     this.connection = joinVoiceChannel({
       channelId: channel.id,
@@ -158,6 +158,8 @@ class PlayerQueue {
     this.items = [];
     this.currentSong = null;
     this.clearStatusPlayer();
+    this.connection?.destroy();
+    this.connection = null;
   }
 
   public skip() {

@@ -10,7 +10,8 @@ import {
   ButtonBuilder,
   ButtonStyle,
   hyperlink,
-  ActivityType
+  ActivityType,
+  ButtonInteraction
 } from "discord.js";
 import {
   CollectionData,
@@ -22,6 +23,7 @@ import {
 } from "../types";
 import ConfigsHandler from "@/utils/configs.utils";
 import { SongNamesAffixesEnum } from "@/src/enums";
+import PlayerQueue from "@/src/player-queue";
 
 export const componentInteractionSeparator = ":";
 
@@ -32,6 +34,11 @@ enum SitesPrefixUrlsEnum {
 
 export type CheckExecuteOptionsReturnType = {
   canExecute: boolean;
+  message?: string;
+};
+
+export type HandleBotConnectionToVoiceChannelReturnType = {
+  success: boolean;
   message?: string;
 };
 
@@ -243,4 +250,38 @@ export const updateClientStatus = () => {
       }
     ]
   });
+};
+
+export const handleBotConnectionToVoiceChannel = (
+  message: MessageCommandType | ButtonInteraction
+): HandleBotConnectionToVoiceChannelReturnType => {
+  const messageMemberGuildMember = message.member as GuildMember;
+  const channel = messageMemberGuildMember?.voice.channel;
+  if (!channel) {
+    return {
+      success: false,
+      message: "You need to join a voice channel first!"
+    };
+  }
+  if (channel.joinable) {
+    PlayerQueue.setConnection(channel);
+    return { success: true };
+  } else if (
+    !message.guild?.members.me?.permissionsIn(channel).has("Connect")
+  ) {
+    return {
+      success: false,
+      message: `I do not have permission to join ${channel.toString()} channel`
+    };
+  } else if (channel.members.size === channel.userLimit) {
+    return {
+      success: false,
+      message: `Channel is full (${channel.members.size}/${channel.userLimit})`
+    };
+  } else {
+    return {
+      success: false,
+      message: `Can't join the ${channel.toString()}. Try again or change channel`
+    };
+  }
 };

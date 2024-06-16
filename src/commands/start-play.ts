@@ -2,7 +2,10 @@ import PlayerQueue from "@/src/player-queue";
 import { getMp3FromMusicFolder } from "@/utils/mp3.utils";
 import { GuildMember, Message, SlashCommandBuilder } from "discord.js";
 import { COMMANDS } from "./commands-list";
-import { removeCommandNameFromMessage } from "@/src/utils/dc.utils";
+import {
+  handleBotConnectionToVoiceChannel,
+  removeCommandNameFromMessage
+} from "@/src/utils/dc.utils";
 import {
   BaseExecuteOptions,
   MessageCommandType,
@@ -40,6 +43,10 @@ const startPlayCommandLogic = async (
   message: MessageCommandType,
   numberOfSongs: number
 ): Promise<string> => {
+  const { success, message: messageInfo } =
+    handleBotConnectionToVoiceChannel(message);
+  if (!success) return messageInfo || "Something went wrong";
+
   const files = (await getMp3FromMusicFolder()).sort(() => 0.5 - Math.random());
   const maxRadioSongs = ConfigsHandler.getConfigs().maxRadioSongs;
   const maxSongs =
@@ -62,16 +69,7 @@ const startPlayCommandLogic = async (
     return "No music files found in the /music folder.";
   }
 
-  const channel = messageMemberGuildMember.voice.channel;
-  if (!channel) {
-    //TODO: i leave this for now here...
-    return "You need to join a voice channel first!";
-  }
-
-  PlayerQueue.setConnection(channel).then(() => {
-    PlayerQueue.start();
-  });
-
+  PlayerQueue.start();
   return `Loaded ${maxSongs} songs`;
 };
 

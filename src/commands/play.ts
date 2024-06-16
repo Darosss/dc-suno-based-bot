@@ -2,18 +2,21 @@ import DownloadMp3Handler from "@/utils/download-logic.utils";
 import { COMMANDS } from "./commands-list";
 import PlayerQueue from "@/src/player-queue";
 import { getMp3FromMusicFolder } from "@/utils/mp3.utils";
-import { removeCommandNameFromMessage } from "@/utils/dc.utils";
+import {
+  handleBotConnectionToVoiceChannel,
+  removeCommandNameFromMessage
+} from "@/utils/dc.utils";
 import { GuildMember, Message, SlashCommandBuilder } from "discord.js";
 import {
   BaseExecuteOptions,
   MessageCommandType,
   MessageInteractionTypes,
   StoredSongData
-} from "../types";
+} from "@/src/types";
 
 type FindByNameReturnType = {
   message: string;
-  fileName?: StoredSongData;
+  songData?: StoredSongData;
 };
 
 const COMMAND_DATA = COMMANDS.play;
@@ -51,13 +54,16 @@ const playCommandLogic = async (
   songUrlOrName: string,
   message: MessageCommandType
 ): Promise<string> => {
-  let songToPlayName: StoredSongData;
-  if (!songUrlOrName) return "Add either the URL or the name of the song.";
+  let songToPlayData: StoredSongData | null = null;
+  const { success, message: messageInfo } =
+    handleBotConnectionToVoiceChannel(message);
+  if (!success) return messageInfo || "Something went wrong";
+  else if (!songUrlOrName) return "Add either the URL or the name of the song.";
   else if (!songUrlOrName.includes("https://suno.com/song/")) {
     const findByNameData = await findByName(songUrlOrName);
-    if (!findByNameData.fileName) return findByNameData.message;
+    if (!findByNameData.songData) return findByNameData.message;
 
-    songToPlayName = findByNameData.fileName;
+    songToPlayData = findByNameData.songData;
   } else {
     const songId = songUrlOrName.split("/").at(-1);
 
@@ -68,25 +74,18 @@ const playCommandLogic = async (
     const { message: downloadMessage, fileData } =
       await DownloadMp3Handler.downloadMP3(songUrlOrName);
     if (!fileData) return downloadMessage;
-    songToPlayName = fileData;
+    songToPlayData = fileData;
   }
+
+  if (!songToPlayData) return "Something went wrong. No song at all";
+
   const messageMemberGuildMember = message.member as GuildMember;
-  const channel = messageMemberGuildMember?.voice.channel;
-  if (!channel) {
-    //TODO: i leave this for now here...
-    return "You need to join a voice channel first!";
-  }
-  if (songToPlayName) {
-    PlayerQueue.setConnection(channel).then(() => {
-      PlayerQueue.enqueue(
-        { songData: songToPlayName, requester: messageMemberGuildMember.id },
-        { resume: true }
-      );
-    });
-    return `Added ${songToPlayName.name}`;
-  } else {
-    return "Something wen't wrong ";
-  }
+
+  PlayerQueue.enqueue(
+    { songData: songToPlayData, requester: messageMemberGuildMember.id },
+    { resume: true }
+  );
+  return `Added ${songToPlayData.name}`;
 };
 
 const findByName = async (songName: string): Promise<FindByNameReturnType> => {
@@ -100,7 +99,7 @@ const findByName = async (songName: string): Promise<FindByNameReturnType> => {
     };
   }
 
-  return { fileName: foundName, message: "Found song" };
+  return { songData: foundName, message: "Found song" };
 };
 
 const data = new SlashCommandBuilder()

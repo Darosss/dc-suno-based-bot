@@ -1,4 +1,3 @@
-import PlayerQueue from "@/src/player-queue";
 import {
   ButtonInteraction,
   GuildMember,
@@ -10,6 +9,7 @@ import {
   ComponentInteractionName,
   componentInteractionSeparator,
   createSongYTChooseEmbed,
+  handleBotConnectionToVoiceChannel,
   removeCommandNameFromMessage
 } from "@/utils/dc.utils";
 import ytdl, { getInfo } from "ytdl-core";
@@ -18,10 +18,12 @@ import DownloadMp3Handler from "@/utils/download-logic.utils";
 import { MUSIC_FOLDER } from "@/src/globals";
 import {
   BaseExecuteOptions,
+  MessageCommandType,
   MessageInteractionTypes,
   SongYTBaseData
 } from "@/src/types";
 import yts from "yt-search";
+import PlayerQueue from "@/src/player-queue";
 
 const COMMAND_DATA = COMMANDS["yt play"];
 const BUTTON_CUSTOM_ID_PREFIX = ComponentInteractionName.YT_PLAY;
@@ -42,7 +44,7 @@ const playYtCommand = async (message: Message) => {
     });
   }
 
-  const messageToSend = await playYtCommandLogic(songUrl, message.member);
+  const messageToSend = await playYtCommandLogic(songUrl, message);
   return await message.reply(messageToSend);
 };
 
@@ -81,18 +83,20 @@ const slashPlayYtCommand = async (message: MessageInteractionTypes) => {
 
   await message.reply("Trying to add your songs");
 
-  const returnMessage = await playYtCommandLogic(
-    songUrl,
-    message.member as GuildMember
-  );
+  const returnMessage = await playYtCommandLogic(songUrl, message);
   return await message.editReply(returnMessage);
 };
 
 export const playYtCommandLogic = async (
   songUrl: string,
-  member: GuildMember | null
+  message: MessageCommandType | ButtonInteraction
 ) => {
+  const { success, message: messageInfo } =
+    handleBotConnectionToVoiceChannel(message);
+  if (!success) return messageInfo || "Something went wrong";
+
   const configs = ConfigsHandler.getConfigs();
+
   try {
     const stream = ytdl(songUrl, { filter: "audioonly" });
 
@@ -105,31 +109,19 @@ export const playYtCommandLogic = async (
       return `The song has lower views than expected. Your song: \`${videoDetails.viewCount}\` Min views: \`${configs.ytPlayerMinViews}\``;
     }
 
-    const songName = await DownloadMp3Handler.downloadYtMp3(
+    const songToPlayData = await DownloadMp3Handler.downloadYtMp3(
       stream,
       videoDetails,
       MUSIC_FOLDER
     );
-    const messageMemberGuildMember = member as GuildMember;
-    const channel = messageMemberGuildMember?.voice.channel;
-    if (!channel) {
-      //TODO: i leave this for now here...
-      return "You need to join a voice channel first!";
-    }
-    if (songName) {
-      PlayerQueue.setConnection(channel).then(() => {
-        PlayerQueue.enqueue(
-          {
-            songData: songName,
-            requester: messageMemberGuildMember.id
-          },
-          { resume: true }
-        );
-      });
-      return `Added ${songName.name}`;
-    } else {
-      return "Something went wrong ";
-    }
+    if (!songToPlayData) return "Something went wrong. No song at all";
+
+    const messageMemberGuildMember = message.member as GuildMember;
+    PlayerQueue.enqueue(
+      { songData: songToPlayData, requester: messageMemberGuildMember.id },
+      { resume: true }
+    );
+    return `Added ${songToPlayData.name}`;
   } catch (err) {
     console.error(err);
     return "Couldn't get your song - sorry";
@@ -139,7 +131,7 @@ export const playYtCommandLogic = async (
 const executeAsButton = async (interaction: ButtonInteraction) => {
   const message = await playYtCommandLogic(
     `${YOUTUBE_LINK}watch?v=${interaction.customId.split(componentInteractionSeparator).at(-1)}`,
-    interaction.member as GuildMember
+    interaction
   );
   return await interaction.reply(message);
 };

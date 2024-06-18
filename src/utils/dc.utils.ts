@@ -263,9 +263,10 @@ export const handleBotConnectionToVoiceChannel = (
       message: "You need to join a voice channel first!"
     };
   }
-  console.log(message.guild?.members.me?.permissionsIn(channel).has("Speak"));
-
-  if (!message.guild?.members.me?.permissionsIn(channel).has("Speak")) {
+  if (channel.members.has(process.env.APP_ID)) {
+    PlayerQueue.setConnection(channel);
+    return { success: true };
+  } else if (!message.guild?.members.me?.permissionsIn(channel).has("Speak")) {
     return {
       success: false,
       message: `I do not have permission to speak in ${channel.toString()} channel`

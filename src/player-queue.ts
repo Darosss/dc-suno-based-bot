@@ -119,33 +119,53 @@ class PlayerQueue {
 
     try {
       const firstSong = this.dequeue();
-      if (!firstSong || !firstSong.songData.name)
+      let songDuration = 0;
+      if (!firstSong || !firstSong.songData.name) {
         //Needed to add !firstSong.name -> in case sth went wrong
+        getBotCommandsChannel()?.send("No songs in queue.");
+        this.clearPlayer();
         return console.error("No current song to play");
+      }
       const songPath = path.join(MUSIC_FOLDER, firstSong.songData.fileName);
+
+      try {
+        songDuration = (await getMp3Duration(songPath)) * 1000;
+      } catch (err) {
+        console.error("Error getting the getMp3Duration:", err);
+        getBotCommandsChannel()?.send(
+          `Cant access a ${firstSong.songData.name} file. Skipping`
+        );
+        return await this.start();
+      }
 
       if (!isFileAccesilbe(songPath)) {
         console.log("No file found, skip");
+        getBotCommandsChannel()?.send(
+          `Cant access a ${firstSong.songData.name} file. Skipping`
+        );
         return await this.start();
       }
+
       this.clearCloseConnectionTimeout();
 
       const resource = createAudioResource(songPath);
 
-      if (!this.audioPlayer || !this.connection)
+      if (!this.audioPlayer || !this.connection) {
+        getBotCommandsChannel()?.send(
+          "There is either no audio or connection from Discord"
+        );
         return console.error("No audio player or connection :(");
+      }
       this.audioPlayer.play(resource);
 
-      try {
-        this.currentSong = {
-          ...firstSong,
-          duration: (await getMp3Duration(songPath)) * 1000,
-          resource
-        };
-        await this.executeStatusPlayer();
-      } catch (err) {
-        console.error("Error:", err);
-      }
+      this.currentSong = {
+        ...firstSong,
+        duration: songDuration > 0 ? songDuration : 120,
+        //IMPLICIT songDuration...
+        // Just in case if ffprobe return <=0
+        resource
+      };
+      await this.executeStatusPlayer();
     } catch (error) {
       console.error(error);
       getBotCommandsChannel()?.send("Failed to play the file.");
@@ -153,13 +173,17 @@ class PlayerQueue {
   }
 
   public stop() {
+    this.clearPlayer();
+    this.connection?.destroy();
+    this.connection = null;
+  }
+
+  private clearPlayer() {
     this.clearPlayTimeout();
     this.audioPlayer?.stop();
     this.items = [];
     this.currentSong = null;
     this.clearStatusPlayer();
-    this.connection?.destroy();
-    this.connection = null;
   }
 
   public skip() {

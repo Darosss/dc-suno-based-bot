@@ -1,5 +1,4 @@
-import { load as cherrioLoad } from "cheerio";
-import fs from "fs";
+import { CheerioAPI, load as cherrioLoad } from "cheerio";
 import https from "https";
 import { MUSIC_FOLDER, SONG_DATA_SEPARATOR } from "../globals";
 import internal from "stream";
@@ -10,6 +9,8 @@ import { getMp3FilesWithInfo, getMp3FolderDirectorySize } from "./mp3.utils";
 import sanitize from "sanitize-filename";
 import { SongNamesAffixesEnum } from "@/src/enums";
 import { StoredSongData } from "../types";
+import fs from "fs";
+import { IncomingMessage } from "http";
 
 type SongData = {
   fileNameTitle?: string;
@@ -115,35 +116,38 @@ class DownloadMp3Handler {
     if (!fs.existsSync(filePath)) {
       return new Promise((resolve, reject) => {
         https
-          .get(`https://cdn1.suno.ai/${songData.songId}.mp3`, (res) => {
-            const stream = fs.createWriteStream(filePath);
+          .get(
+            `https://cdn1.suno.ai/${songData.songId}.mp3`,
+            (res: IncomingMessage) => {
+              const stream = fs.createWriteStream(filePath);
 
-            res.pipe(stream);
-            stream.on("finish", async () => {
-              const MBWritten = stream.bytesWritten / 1000 / 1000;
-              this.increaseCurrentFolderSizeMB(MBWritten);
-              await this.handleMaxMBMusicFolderLogic();
+              res.pipe(stream);
+              stream.on("finish", async () => {
+                const MBWritten = stream.bytesWritten / 1000 / 1000;
+                this.increaseCurrentFolderSizeMB(MBWritten);
+                await this.handleMaxMBMusicFolderLogic();
 
-              stream.close();
+                stream.close();
 
-              return resolve({
-                message: `File ${songData.fileNameTitle} downloaded.`,
-                fileData: {
-                  fileName,
-                  id: songData.songId,
-                  name: songData.fileNameTitle!,
-                  site: SongNamesAffixesEnum.suno
-                }
+                return resolve({
+                  message: `File ${songData.fileNameTitle} downloaded.`,
+                  fileData: {
+                    fileName,
+                    id: songData.songId,
+                    name: songData.fileNameTitle!,
+                    site: SongNamesAffixesEnum.suno
+                  }
+                });
               });
-            });
-            stream.on("error", (err) => {
-              console.error(
-                "Error occured while trying to save mp3:",
-                err.message
-              );
-              return resolve({ message: "Probably can't play this file" });
-            });
-          })
+              stream.on("error", (err) => {
+                console.error(
+                  "Error occured while trying to save mp3:",
+                  err.message
+                );
+                return resolve({ message: "Probably can't play this file" });
+              });
+            }
+          )
           .on("error", (err) => {
             console.error(
               "Error occured while trying to get mp3 from site: " + err.message
@@ -179,12 +183,19 @@ class DownloadMp3Handler {
 
           res.on("end", async () => {
             const $ = cherrioLoad(data);
+
+            const songId = url.split("/").at(-1)!;
+            const songWebDetails = this._handleGetSunoSongDetailsFromWeb($,songId);
+
+            if (!songWebDetails.foundTitle)
+              return resolve({ message: "Song isn't found" });
+
             const foundTitleSplitted = $("title").text().split("by");
 
             if (foundTitleSplitted.length <= 1 && foundTitleSplitted.at(0))
               return resolve({ message: "Song isn't found" });
 
-            songData.fileNameTitle = foundTitleSplitted.at(0)?.trim();
+            songData.fileNameTitle = songWebDetails.foundTitle.trim();
             if (!songData.songId || !songData.fileNameTitle)
               return resolve({ message: "Song id or file name is wrong" });
             try {
@@ -204,6 +215,29 @@ class DownloadMp3Handler {
           reject({ message: "Some error occured" });
         });
     });
+  }
+  private _handleGetSunoSongDetailsFromWeb($: CheerioAPI, songId: string) {
+    const foundPageTitleSplitted = $("title").text().split("by");
+    let foundTitle = foundPageTitleSplitted.at(0) || null;
+    //Note: in case where title isn't a song name, check scripts for name
+    const splitedScripts = $.html().split("</script>");
+    const titlesRegex = [
+      /\\"title\\":\\"(.*?)\\"/,
+      /\{\"property\":\"og:title\",\"content\":\"(.*?)\"}/,
+      /\{\"name\":\"twitter:title\",\"content\":\"(.*?)\"}/
+    ];
+    for (let i = 0; i < splitedScripts.length; i++) {
+      const currentScriptString = splitedScripts[i];
+
+      //TODO: make it better -> need to imrpove sometimes doesn't find the title from here
+      if (foundTitle) break;
+      else if (!currentScriptString.includes(songId!)) continue;
+
+      for (const regexTitle of titlesRegex) {
+        foundTitle = currentScriptString.match(regexTitle)?.at(1) || null;
+      }
+    }
+    return { foundTitle };
   }
 }
 

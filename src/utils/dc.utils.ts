@@ -122,7 +122,7 @@ export const createSongEmbed = (
     .addFields(
       {
         name: "Name",
-        value: `${songData.fileName}\n${createSongHyperlink(songData)}`,
+        value: `${songData.name}\n${createSongHyperlink(songData)}`,
         inline: true
       },
       {

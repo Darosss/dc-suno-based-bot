@@ -7,6 +7,8 @@ import {
   removeCommandNameFromMessage
 } from "@/utils/dc.utils";
 import { GuildMember, Message, SlashCommandBuilder } from "discord.js";
+import { isSunoSong } from "@/utils/suno.utils";
+
 import {
   BaseExecuteOptions,
   MessageCommandType,
@@ -59,20 +61,19 @@ const playCommandLogic = async (
     handleBotConnectionToVoiceChannel(message);
   if (!success) return messageInfo || "Something went wrong";
   else if (!songUrlOrName) return "Add either the URL or the name of the song.";
-  else if (!songUrlOrName.includes("https://suno.com/song/")) {
+  else if (!isSunoSong(songUrlOrName)) {
     const findByNameData = await findByName(songUrlOrName);
     if (!findByNameData.songData) return findByNameData.message;
 
     songToPlayData = findByNameData.songData;
   } else {
     const songId = songUrlOrName.split("/").at(-1);
-
     if (!songId) {
       return baseWrongMessageReply;
     }
 
     const { message: downloadMessage, fileData } =
-      await DownloadMp3Handler.downloadMP3(songUrlOrName);
+      await DownloadMp3Handler.downloadSunoMP3(songId);
     if (!fileData) return downloadMessage;
     songToPlayData = fileData;
   }

@@ -168,14 +168,15 @@ class DownloadMp3Handler {
     }
   }
 
-  public async downloadMP3(url: string): Promise<CommonReturnDownload> {
+  public async downloadSunoMP3(songId: string): Promise<CommonReturnDownload> {
+    const sunoUrl = `https://suno.com/song/${songId}`;
     return new Promise((resolve, reject) => {
       return https
-        .get(url, (res) => {
+        .get(sunoUrl, (res) => {
           let data = "";
           const songData: SongData = {
             fileNameTitle: "",
-            songId: url.split("/").at(-1) || ""
+            songId
           };
           res.on("data", (chunk) => {
             data += chunk;
@@ -183,10 +184,10 @@ class DownloadMp3Handler {
 
           res.on("end", async () => {
             const $ = cherrioLoad(data);
-
-            const songId = url.split("/").at(-1)!;
-            const songWebDetails = this._handleGetSunoSongDetailsFromWeb($,songId);
-
+            const songWebDetails = this._handleGetSunoSongDetailsFromWeb(
+              $,
+              songId
+            );
             if (!songWebDetails.foundTitle)
               return resolve({ message: "Song isn't found" });
 

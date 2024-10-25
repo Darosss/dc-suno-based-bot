@@ -4,6 +4,7 @@ import { Message, SlashCommandBuilder } from "discord.js";
 import { BaseExecuteOptions, MessageInteractionTypes } from "../types";
 import { removeCommandNameFromMessage } from "@/utils/dc.utils";
 import ConfigsHandler from "@/src/utils/configs.utils";
+import { isSunoSong } from "../utils/suno.utils";
 
 const COMMAND_DATA = COMMANDS["add many songs"];
 const SLASH_COMMAND_OPTION_SONG_URLS = "songs-urls";
@@ -35,21 +36,23 @@ const slashCommandAddMultipleSongs = async (
 
 const addMultipleSongsLogic = async (songsUrls: string): Promise<string> => {
   console.log(songsUrls);
-  const songsUrlSplittedUnique = Array.from(
-    new Set(songsUrls.split(";"))
-  ).filter((url) => url.includes("https://suno.com/song/"));
+  const songsUrlSplittedUnique = Array.from(new Set(songsUrls.split(";")))
+    .map((url) => {
+      console.log(url, "-> ", isSunoSong(url));
+      if (isSunoSong(url)) return url.split("/").at(-1)!;
+      else return "";
+    })
+    .filter(Boolean);
+
   const maxSongs = ConfigsHandler.getConfigs().addMultipleSongsMaxCount;
   if (songsUrlSplittedUnique.length > maxSongs) {
     return `No more than ${maxSongs} songs`;
   }
 
-  console.log(songsUrlSplittedUnique, "eee");
-
   const messagesToSend = [];
   for await (const songUrl of songsUrlSplittedUnique) {
-    const { message: downloadMessage } = await DownloadMp3Handler.downloadMP3(
-      songUrl.trim()
-    );
+    const { message: downloadMessage } =
+      await DownloadMp3Handler.downloadSunoMP3(songUrl.trim());
     messagesToSend.push(downloadMessage);
   }
 

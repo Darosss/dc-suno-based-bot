@@ -28,12 +28,14 @@
     "libsodium-wrappers": "^0.7.13",
     "module-alias": "^2.2.3",
     "sanitize-filename": "^1.6.3",
+    "uuid": "^10.0.0",
     "yt-search": "^2.11.0",
     "ytdl-core": "^4.11.5"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
     "@types/node": "^20.12.13",
+    "@types/uuid": "^10.0.0",
     "@types/yt-search": "^2.10.3",
     "@typescript-eslint/eslint-plugin": "^7.11.0",
     "cross-env": "^7.0.3",

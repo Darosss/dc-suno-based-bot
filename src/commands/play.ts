@@ -23,7 +23,7 @@ type FindByNameReturnType = {
 
 const COMMAND_DATA = COMMANDS.play;
 const SLASH_COMMAND_OPTION_SONG_ULR_NAME = "song-url-or-name";
-const baseWrongMessageReply = `Give me correct command - example: ${process.env.COMMANDS_PREFIX}${COMMAND_DATA.name} https://suno.com/song/04db00ab-f7d7-40f8-a584-124b096beb31`;
+const baseWrongMessageReply = `Give me correct command - example: ${process.env.COMMANDS_PREFIX}${COMMAND_DATA.name} https://suno.com/song/<SONG_ID>`;
 
 const playCommand = async (message: Message) => {
   const songUrlOrName = removeCommandNameFromMessage(

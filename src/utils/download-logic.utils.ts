@@ -1,6 +1,10 @@
 import { CheerioAPI, load as cherrioLoad } from "cheerio";
 import https from "https";
-import { MUSIC_FOLDER, SONG_DATA_SEPARATOR } from "../globals";
+import {
+  MUSIC_FOLDER,
+  SONG_DATA_SEPARATOR,
+  SUNO_BASE_API_URL
+} from "../globals";
 import internal from "stream";
 import ytdl from "ytdl-core";
 import path from "path";
@@ -8,7 +12,7 @@ import { isFileAccesilbe } from "./files.utils";
 import { getMp3FilesWithInfo, getMp3FolderDirectorySize } from "./mp3.utils";
 import sanitize from "sanitize-filename";
 import { SongNamesAffixesEnum } from "@/src/enums";
-import { StoredSongData } from "../types";
+import { StoredSongData, SunoApiClipNeededData } from "../types";
 import fs from "fs";
 import { IncomingMessage } from "http";
 
@@ -20,6 +24,10 @@ type SongData = {
 type CommonReturnDownload = {
   message: string;
   fileData?: StoredSongData;
+};
+type CommonReturnInfo = {
+  message: string;
+  fileData?: SongData;
 };
 
 (async () => {
@@ -33,6 +41,7 @@ type CommonReturnDownload = {
 class DownloadMp3Handler {
   private currentFolderSizeMB: number = 0;
   private maxFolderSizeMB: number = Number(process.env.MUSIC_FOLDER_MAX_MB);
+  private COMMON_ERROR_API_MESSAGE = "Couldn't get an api call. Try again or";
   constructor() {
     this.init();
   }
@@ -168,7 +177,9 @@ class DownloadMp3Handler {
     }
   }
 
-  public async downloadSunoMP3(songId: string): Promise<CommonReturnDownload> {
+  public async getSongDetailsWithCheerio(
+    songId: string
+  ): Promise<CommonReturnInfo> {
     const sunoUrl = `https://suno.com/song/${songId}`;
     return new Promise((resolve, reject) => {
       return https
@@ -197,16 +208,14 @@ class DownloadMp3Handler {
               return resolve({ message: "Song isn't found" });
 
             songData.fileNameTitle = songWebDetails.foundTitle.trim();
+
             if (!songData.songId || !songData.fileNameTitle)
               return resolve({ message: "Song id or file name is wrong" });
-            try {
-              const { message, fileData } =
-                await this.getMp3AndDownload(songData);
-              if (!fileData) return resolve({ message });
-              return resolve({ fileData, message: `Added ${fileData.name}` });
-            } catch (error) {
-              throw error;
-            }
+
+            return resolve({
+              fileData: songData,
+              message: "Got web info with cheerio"
+            });
           });
         })
         .on("error", (err) => {
@@ -216,6 +225,76 @@ class DownloadMp3Handler {
           reject({ message: "Some error occured" });
         });
     });
+  }
+
+  private async getSongsDetailsFromApi(
+    songId: string
+  ): Promise<CommonReturnInfo> {
+    const clipUrl = `${SUNO_BASE_API_URL}/clip/${songId}`;
+    console.log(clipUrl);
+    try {
+      const response = await fetch(clipUrl, {
+        method: "GET"
+      });
+      const data = await response.json();
+      if ("audio_url" in data && "id" in data) {
+        const dataAsSunoApiClipNeededData = data as SunoApiClipNeededData;
+        return {
+          message: "Found song from api",
+          fileData: {
+            fileNameTitle: dataAsSunoApiClipNeededData.title,
+            songId
+          }
+        };
+      } else {
+        return { message: this.COMMON_ERROR_API_MESSAGE };
+      }
+    } catch (err) {
+      console.error(err);
+      return {
+        message: this.COMMON_ERROR_API_MESSAGE
+      };
+    }
+  }
+
+  public async downloadSunoMP3(songId: string): Promise<CommonReturnDownload> {
+    try {
+      let songData: SongData | null = null;
+      let errorMessages: String[] = [];
+
+      if (!process.env.FORCE_CHEERIO_UPDATE_SONGS) {
+        const { fileData, message } = await this.getSongsDetailsFromApi(songId);
+        if (!fileData) {
+          errorMessages.push(message);
+        } else {
+          songData = fileData;
+        }
+      }
+
+      if (!songData) {
+        const { fileData, message } =
+          await this.getSongDetailsWithCheerio(songId);
+        if (!fileData) {
+          errorMessages.push(message);
+        } else {
+          songData = fileData;
+        }
+      }
+
+      if (!songData) {
+        return { message: errorMessages.join(" | ") };
+      }
+
+      const { message, fileData: storedFileData } =
+        await this.getMp3AndDownload(songData);
+      if (!storedFileData) return { message };
+      return {
+        fileData: storedFileData,
+        message: `Added ${storedFileData.name}`
+      };
+    } catch (error) {
+      throw error;
+    }
   }
   private _handleGetSunoSongDetailsFromWeb($: CheerioAPI, songId: string) {
     const foundPageTitleSplitted = $("title").text().split("by");

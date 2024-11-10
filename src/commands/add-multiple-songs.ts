@@ -11,7 +11,7 @@ const SLASH_COMMAND_OPTION_SONG_URLS = "songs-urls";
 
 const baseWrongMessageReply = `_Give me correct songs urls with ids each separated by [;] (semicolon)_
 - example: 
-\`${process.env.COMMANDS_PREFIX}${COMMAND_DATA.name} https://suno.com/song/04db00ab-f7d7-40f8-a584-124b096beb31;https://suno.com/song/f1d5aad1-ec23-42e7-9e47-2617ea2de69a`;
+\`${process.env.COMMANDS_PREFIX}${COMMAND_DATA.name} https://suno.com/song/<SONG_ID>;https://suno.com/song/<SONG_ID>`;
 
 const addMultipleSongs = async (message: Message) => {
   const songsUrls = removeCommandNameFromMessage(message.content, COMMAND_DATA);

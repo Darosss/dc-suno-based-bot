@@ -24,6 +24,7 @@ export type CustomEnvTypes = {
   BOT_STATUS_CHANNEL_ID: string;
   MUSIC_FOLDER_MAX_MB: string;
   FFPROBE_PATH?: string;
+  FORCE_CHEERIO_UPDATE_SONGS?: string;
 };
 
 export type TODO = any;
@@ -95,4 +96,9 @@ export type StoredSongData = {
   name: string;
   id: string;
   site: SongNamesAffixesEnum;
+};
+
+//I specialy omit others - no need them
+export type SunoApiClipNeededData = {
+  title: string;
 };

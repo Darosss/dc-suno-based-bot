@@ -6,9 +6,9 @@ import {
   SUNO_BASE_API_URL
 } from "../globals";
 import internal from "stream";
-import ytdl from "ytdl-core";
+import ytdl from "@distube/ytdl-core";
 import path from "path";
-import { isFileAccesilbe } from "./files.utils";
+import { deleteFile, isFileAccesilbe } from "./files.utils";
 import { getMp3FilesWithInfo, getMp3FolderDirectorySize } from "./mp3.utils";
 import sanitize from "sanitize-filename";
 import { SongNamesAffixesEnum } from "@/src/enums";
@@ -81,7 +81,7 @@ class DownloadMp3Handler {
         filesWithStats[i].fileName
       );
       console.log("Data MB exceed - need to delete", filePathToDelete);
-      await fs.promises.unlink(filePathToDelete);
+      await deleteFile(filePathToDelete);
       i++;
     }
   }

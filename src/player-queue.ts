@@ -13,7 +13,7 @@ import { DiscordAPIError, Message, VoiceBasedChannel } from "discord.js";
 import { CurrentSongType, PlayerQueueItemType } from "./types";
 import { client } from "./init-bot";
 import { createSongEmbed, getBotCommandsChannel } from "@/src/utils/dc.utils";
-import { isFileAccesilbe } from "@/src/utils/files.utils";
+import { deleteFile, isFileAccesilbe } from "@/src/utils/files.utils";
 import ConfigsHandler from "@/src/utils/configs.utils";
 
 type EnqueueOptions = { resume: boolean };
@@ -133,8 +133,10 @@ class PlayerQueue {
       } catch (err) {
         console.error("Error getting the getMp3Duration:", err);
         getBotCommandsChannel()?.send(
-          `Cant access a ${firstSong.songData.name} file. Skipping`
+          `Cant access a duration of ${firstSong.songData.name} file. If this persist - youtube's fault`
         );
+        await deleteFile(songPath);
+
         return await this.start();
       }
 
@@ -143,6 +145,7 @@ class PlayerQueue {
         getBotCommandsChannel()?.send(
           `Cant access a ${firstSong.songData.name} file. Skipping`
         );
+        await deleteFile(songPath);
         return await this.start();
       }
 

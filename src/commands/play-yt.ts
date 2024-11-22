@@ -12,7 +12,7 @@ import {
   handleBotConnectionToVoiceChannel,
   removeCommandNameFromMessage
 } from "@/utils/dc.utils";
-import ytdl, { getInfo } from "ytdl-core";
+import ytdl, { getInfo } from "@distube/ytdl-core";
 import ConfigsHandler from "@/utils/configs.utils";
 import DownloadMp3Handler from "@/utils/download-logic.utils";
 import { MUSIC_FOLDER } from "@/src/globals";

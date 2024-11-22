@@ -203,7 +203,10 @@ export const checkExecuteOptions = (
   executeOpts: CollectionData<unknown>["executeOpts"],
   message: MessageCommandType
 ): CheckExecuteOptionsReturnType => {
-  if (!executeOpts) return { canExecute: true };
+  const ownerExecuting =
+    (message.member as GuildMember).id === process.env.OWNER_ID;
+  //Note: If owner execute, he have rights LUL
+  if (!executeOpts || ownerExecuting) return { canExecute: true };
   else if (
     executeOpts.needsToBeInSameVoiceChannel &&
     !checkIfUserIsInVoiceChannel(message.member as GuildMember)
@@ -220,10 +223,7 @@ export const checkExecuteOptions = (
       canExecute: false,
       message: "You are not in the same voice channel as me"
     };
-  } else if (
-    executeOpts.onlyOwner &&
-    (message.member as GuildMember).id !== process.env.OWNER_ID
-  ) {
+  } else if (executeOpts.onlyOwner && !ownerExecuting) {
     return {
       canExecute: false,
       message: "Only owner can do the command. sorry"

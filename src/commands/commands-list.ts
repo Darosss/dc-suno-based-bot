@@ -10,6 +10,7 @@ export type COMMANDS_NAMES =
   | "add many songs"
   | "commands"
   | "songs"
+  | "all songs"
   | "shuffle"
   | "repeat"
   | "configs"
@@ -43,6 +44,10 @@ export const COMMANDS: Record<COMMANDS_NAMES, CommandsType> = {
   songs: {
     name: "songs",
     description: "I will send you a DM message with possible files in .txt"
+  },
+  "all songs": {
+    name: "all songs",
+    description: "I will send you a DM message with all possible songs in .txt"
   },
   shuffle: {
     name: "shuffle",

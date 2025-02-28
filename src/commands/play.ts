@@ -1,7 +1,10 @@
 import DownloadMp3Handler from "@/utils/download-logic.utils";
 import { COMMANDS } from "./commands-list";
 import PlayerQueue from "@/src/player-queue";
-import { getMp3FromMusicFolder } from "@/utils/mp3.utils";
+import {
+  getAllPossibleAudios,
+  getStoredSongDataFromFileName
+} from "@/utils/mp3.utils";
 import {
   handleBotConnectionToVoiceChannel,
   removeCommandNameFromMessage
@@ -15,6 +18,9 @@ import {
   MessageInteractionTypes,
   StoredSongData
 } from "@/src/types";
+import { isFileAccesilbe } from "../utils/files.utils";
+import { MUSIC_FOLDER } from "../globals";
+import path from "path";
 
 type FindByNameReturnType = {
   message: string;
@@ -57,17 +63,29 @@ const playCommandLogic = async (
   message: MessageCommandType
 ): Promise<string> => {
   let songToPlayData: StoredSongData | null = null;
+  let isCurrentSongDownloaded = false;
   const { success, message: messageInfo } =
     handleBotConnectionToVoiceChannel(message);
   if (!success) return messageInfo || "Something went wrong";
   else if (!songUrlOrName) return "Add either the URL or the name of the song.";
-  else if (!isSunoSong(songUrlOrName)) {
+
+  if (!isSunoSong(songUrlOrName)) {
+    //if not /song/ suno/ find by name
     const findByNameData = await findByName(songUrlOrName);
     if (!findByNameData.songData) return findByNameData.message;
 
     songToPlayData = findByNameData.songData;
-  } else {
-    const songId = songUrlOrName.split("/").at(-1);
+    console.log(findByNameData.songData.fileName, "jaki path?");
+    if (
+      await isFileAccesilbe(
+        path.join(MUSIC_FOLDER, findByNameData.songData.fileName)
+      )
+    )
+      isCurrentSongDownloaded = true;
+  }
+
+  if (!isCurrentSongDownloaded) {
+    const songId = songToPlayData?.id || songUrlOrName.split("/").at(-1);
     if (!songId) {
       return baseWrongMessageReply;
     }
@@ -90,17 +108,22 @@ const playCommandLogic = async (
 };
 
 const findByName = async (songName: string): Promise<FindByNameReturnType> => {
-  const files = await getMp3FromMusicFolder();
-  const foundName = files.find((songData) =>
-    songData.fileName.toLowerCase().includes(songName.trim().toLowerCase())
+  const possibleAudios = (await getAllPossibleAudios()).split("\n");
+
+  const foundName = possibleAudios.find((songData) =>
+    songData.toLowerCase().includes(songName.trim().toLowerCase())
   );
+
   if (!foundName) {
     return {
       message: "No song with your search"
     };
   }
 
-  return { songData: foundName, message: "Found song" };
+  return {
+    songData: getStoredSongDataFromFileName(foundName),
+    message: "Found song"
+  };
 };
 
 const data = new SlashCommandBuilder()

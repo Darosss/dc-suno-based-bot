@@ -9,7 +9,12 @@ import internal from "stream";
 import ytdl from "@distube/ytdl-core";
 import path from "path";
 import { deleteFile, isFileAccesilbe } from "./files.utils";
-import { getMp3FilesWithInfo, getMp3FolderDirectorySize } from "./mp3.utils";
+import {
+  getMp3FilesWithInfo,
+  getMp3FolderDirectorySize,
+  getStoredSongDataFromFileName,
+  updateMp3ToPossibleList
+} from "./mp3.utils";
 import sanitize from "sanitize-filename";
 import { SongNamesAffixesEnum } from "@/src/enums";
 import { StoredSongData, SunoApiClipNeededData } from "../types";
@@ -107,12 +112,12 @@ class DownloadMp3Handler {
         await this.handleMaxMBMusicFolderLogic();
       });
     }
-    return {
-      fileName: songName,
-      id: videoDetails.videoId,
-      name: titleSanitized,
-      site: SongNamesAffixesEnum.youtube
-    };
+
+    const storedData = getStoredSongDataFromFileName(songName);
+
+    await updateMp3ToPossibleList([songName]);
+
+    return storedData;
   }
 
   private async getMp3AndDownload(
@@ -137,15 +142,12 @@ class DownloadMp3Handler {
                 await this.handleMaxMBMusicFolderLogic();
 
                 stream.close();
+                const storedData = getStoredSongDataFromFileName(fileName);
 
+                await updateMp3ToPossibleList([fileName]);
                 return resolve({
                   message: `File ${songData.fileNameTitle} downloaded.`,
-                  fileData: {
-                    fileName,
-                    id: songData.songId,
-                    name: songData.fileNameTitle!,
-                    site: SongNamesAffixesEnum.suno
-                  }
+                  fileData: storedData
                 });
               });
               stream.on("error", (err) => {

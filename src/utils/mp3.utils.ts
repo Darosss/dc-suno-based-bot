@@ -6,7 +6,14 @@ import getAudioDurationInSeconds from "get-audio-duration";
 import { StoredSongData } from "../types";
 import { SongNamesAffixesEnum } from "../enums";
 
-const getStoredSongDataFromFileName = (fileName: string): StoredSongData => {
+export const ALL_POSSIBLE_AUDIOS_PATH = path.join(
+  MUSIC_FOLDER,
+  "allMp3List.txt"
+);
+
+export const getStoredSongDataFromFileName = (
+  fileName: string
+): StoredSongData => {
   const separatedFileName = fileName
     .split(".mp3")[0]
     .split(SONG_DATA_SEPARATOR);
@@ -31,6 +38,33 @@ export const getMp3FromMusicFolder = async (): Promise<StoredSongData[]> =>
 export const getMp3FolderDirectorySize = async () => {
   const data = await getMp3DirectorySize();
   return data;
+};
+
+export const getAllPossibleAudios = async (): Promise<string> => {
+  try {
+    const allMp3List = await fs.promises.readFile(ALL_POSSIBLE_AUDIOS_PATH, {
+      encoding: "utf-8"
+    });
+
+    return allMp3List;
+  } catch {
+    return "";
+  }
+};
+
+export const updateMp3ToPossibleList = async (
+  mp3FilesData: string[]
+): Promise<string> => {
+  const currentAudios = (await getAllPossibleAudios()).split("\n");
+
+  for (const fileData of mp3FilesData) {
+    console.log(currentAudios, fileData, "kurwo", "test");
+    if (currentAudios.includes(fileData)) continue;
+    currentAudios.push(fileData);
+  }
+
+  await fsAsync.writeFile(ALL_POSSIBLE_AUDIOS_PATH, currentAudios.join("\n"));
+  return ALL_POSSIBLE_AUDIOS_PATH;
 };
 
 export const saveMp3ListToFile = async (

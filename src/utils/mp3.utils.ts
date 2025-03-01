@@ -67,13 +67,14 @@ export const updateMp3ToPossibleList = async (
   return ALL_POSSIBLE_AUDIOS_PATH;
 };
 
-export const saveMp3ListToFile = async (
-  mp3FilesData: StoredSongData[]
-): Promise<string> => {
+export const saveMp3ListToFile = async (mp3FilesData: StoredSongData[]) => {
   const tempFilePath = path.join(MUSIC_FOLDER, "mp3list.txt");
   const fileContent = mp3FilesData.map((data) => data.fileName).join("\n");
   await fsAsync.writeFile(tempFilePath, fileContent);
-  return tempFilePath;
+  return {
+    path: tempFilePath,
+    data: fileContent
+  };
 };
 
 export const getMp3DirectorySize = async () => {

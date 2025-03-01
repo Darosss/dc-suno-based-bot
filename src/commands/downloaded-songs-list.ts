@@ -3,6 +3,7 @@ import { getMp3FromMusicFolder, saveMp3ListToFile } from "@/utils/mp3.utils";
 import { COMMANDS } from "./commands-list";
 import { isDcMessage } from "@/utils/dc.utils";
 import { MessageCommandType } from "@/src/types";
+import { SONG_DATA_SEPARATOR } from "../globals";
 
 const COMMAND_DATA = COMMANDS.songs;
 
@@ -24,7 +25,16 @@ const sendPossibleFilesAsPrivMessage = async () => {
   const files = await getMp3FromMusicFolder();
   if (files.length <= 0) return;
   const mp3NamesTxt = await saveMp3ListToFile(files);
-  const attachment = new AttachmentBuilder(mp3NamesTxt);
+
+  const possibleAudiosWithoutSeparator = mp3NamesTxt.data.replaceAll(
+    SONG_DATA_SEPARATOR,
+    ";"
+  );
+
+  const attachment = new AttachmentBuilder(
+    Buffer.from(possibleAudiosWithoutSeparator),
+    { name: "downloaded_audios.txt" }
+  );
 
   return attachment;
 };

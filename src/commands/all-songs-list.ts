@@ -1,11 +1,9 @@
 import { AttachmentBuilder, SlashCommandBuilder } from "discord.js";
-import {
-  ALL_POSSIBLE_AUDIOS_PATH,
-  getAllPossibleAudios
-} from "@/utils/mp3.utils";
+import { getAllPossibleAudios } from "@/utils/mp3.utils";
 import { COMMANDS } from "./commands-list";
 import { isDcMessage } from "@/utils/dc.utils";
 import { MessageCommandType } from "@/src/types";
+import { SONG_DATA_SEPARATOR } from "../globals";
 
 const COMMAND_DATA = COMMANDS["all songs"];
 
@@ -27,7 +25,15 @@ const sendPossibleFilesAsPrivMessage = async () => {
   const possibleAudios = await getAllPossibleAudios();
   if (possibleAudios.length <= 0) return;
 
-  const attachment = new AttachmentBuilder(ALL_POSSIBLE_AUDIOS_PATH);
+  const possibleAudiosWithoutSeparator = possibleAudios.replaceAll(
+    SONG_DATA_SEPARATOR,
+    ";"
+  );
+
+  const attachment = new AttachmentBuilder(
+    Buffer.from(possibleAudiosWithoutSeparator),
+    { name: "all_possible_audios.txt" }
+  );
   return attachment;
 };
 

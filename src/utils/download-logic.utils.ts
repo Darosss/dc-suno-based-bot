@@ -6,7 +6,7 @@ import {
   SUNO_BASE_API_URL
 } from "../globals";
 import internal from "stream";
-import ytdl from "@distube/ytdl-core";
+import ytdl, { getInfo } from "@distube/ytdl-core";
 import path from "path";
 import { deleteFile, isFileAccesilbe } from "./files.utils";
 import {
@@ -296,6 +296,22 @@ class DownloadMp3Handler {
       };
     } catch (error) {
       throw error;
+    }
+  }
+
+  public async downloadAudio(song: StoredSongData) {
+    switch (song.site) {
+      case SongNamesAffixesEnum.youtube:
+        const stream = ytdl(song.name, { filter: "audioonly" });
+        const info = await getInfo(song.name);
+
+        const videoDetails = info.videoDetails;
+        return await this.downloadYtMp3(stream, videoDetails, MUSIC_FOLDER);
+      case SongNamesAffixesEnum.suno:
+        return await this.getMp3AndDownload({
+          ...song,
+          songId: song.id
+        });
     }
   }
   private _handleGetSunoSongDetailsFromWeb($: CheerioAPI, songId: string) {

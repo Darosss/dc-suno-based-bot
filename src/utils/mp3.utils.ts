@@ -58,7 +58,6 @@ export const updateMp3ToPossibleList = async (
   const currentAudios = (await getAllPossibleAudios()).split("\n");
 
   for (const fileData of mp3FilesData) {
-    console.log(currentAudios, fileData, "kurwo", "test");
     if (currentAudios.includes(fileData)) continue;
     currentAudios.push(fileData);
   }

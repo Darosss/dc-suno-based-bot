@@ -15,6 +15,7 @@ import { client } from "./init-bot";
 import { createSongEmbed, getBotCommandsChannel } from "@/src/utils/dc.utils";
 import { deleteFile, isFileAccesilbe } from "@/src/utils/files.utils";
 import ConfigsHandler from "@/src/utils/configs.utils";
+import downloadMp3Handler from "@/utils/download-logic.utils";
 
 type EnqueueOptions = { resume: boolean };
 
@@ -22,6 +23,8 @@ type StatusDataType = {
   message: Message;
   interval: NodeJS.Timeout;
 };
+
+const MAX_DOWNLOAD_TRIES = 2;
 
 class PlayerQueue {
   private items: PlayerQueueItemType[];
@@ -114,6 +117,47 @@ class PlayerQueue {
     });
   }
 
+  private async handleAudioAccessibility(
+    song: PlayerQueueItemType,
+    songPath: string
+  ) {
+    let currentTry = 0;
+    const fileAccessible = await isFileAccesilbe(songPath);
+    if (fileAccessible) return true;
+
+    while (currentTry < MAX_DOWNLOAD_TRIES) {
+      console.log(
+        `No file found, trying to download try: ${currentTry}/${MAX_DOWNLOAD_TRIES}`
+      );
+      await downloadMp3Handler.downloadAudio(song.songData);
+      if (await isFileAccesilbe(songPath)) return true;
+      await deleteFile(songPath);
+      currentTry++;
+    }
+
+    getBotCommandsChannel()?.send(
+      `Cant access a ${song.songData.name} file. Skipping`
+    );
+    return false;
+  }
+
+  private async handleAudioDuration(
+    song: PlayerQueueItemType,
+    songPath: string
+  ) {
+    try {
+      return (await getMp3Duration(songPath)) * 1000;
+    } catch (err) {
+      console.error("Error getting the getMp3Duration:", err);
+      getBotCommandsChannel()?.send(
+        `Cant access a duration of ${song.songData.name} file. If this persist - youtube's fault`
+      );
+      await deleteFile(songPath);
+
+      return 0;
+    }
+  }
+
   async start(): Promise<void> {
     this.clearPlayTimeout();
 
@@ -127,27 +171,14 @@ class PlayerQueue {
         return console.error("No current song to play");
       }
       const songPath = path.join(MUSIC_FOLDER, firstSong.songData.fileName);
+      const fileAccessible = await this.handleAudioAccessibility(
+        firstSong,
+        songPath
+      );
 
-      try {
-        songDuration = (await getMp3Duration(songPath)) * 1000;
-      } catch (err) {
-        console.error("Error getting the getMp3Duration:", err);
-        getBotCommandsChannel()?.send(
-          `Cant access a duration of ${firstSong.songData.name} file. If this persist - youtube's fault`
-        );
-        await deleteFile(songPath);
+      songDuration = await this.handleAudioDuration(firstSong, songPath);
 
-        return await this.start();
-      }
-
-      if (!isFileAccesilbe(songPath)) {
-        console.log("No file found, skip");
-        getBotCommandsChannel()?.send(
-          `Cant access a ${firstSong.songData.name} file. Skipping`
-        );
-        await deleteFile(songPath);
-        return await this.start();
-      }
+      if (songDuration <= 0 || !fileAccessible) return await this.start();
 
       this.clearCloseConnectionTimeout();
 

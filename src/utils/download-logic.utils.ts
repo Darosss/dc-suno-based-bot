@@ -308,10 +308,7 @@ class DownloadMp3Handler {
         const videoDetails = info.videoDetails;
         return await this.downloadYtMp3(stream, videoDetails, MUSIC_FOLDER);
       case SongNamesAffixesEnum.suno:
-        return await this.getMp3AndDownload({
-          ...song,
-          songId: song.id
-        });
+        return await this.downloadSunoMP3(song.id);
     }
   }
   private _handleGetSunoSongDetailsFromWeb($: CheerioAPI, songId: string) {

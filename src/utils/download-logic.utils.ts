@@ -58,8 +58,6 @@ class DownloadMp3Handler {
   private async handleMaxMBMusicFolderLogic() {
     if (this.currentFolderSizeMB >= this.maxFolderSizeMB) {
       await this.removeExceedingDataFromMp3Folder();
-    } else {
-      console.log("All good! ");
     }
   }
 
@@ -233,7 +231,6 @@ class DownloadMp3Handler {
     songId: string
   ): Promise<CommonReturnInfo> {
     const clipUrl = `${SUNO_BASE_API_URL}/clip/${songId}`;
-    console.log(clipUrl);
     try {
       const response = await fetch(clipUrl, {
         method: "GET"

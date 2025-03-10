@@ -55,14 +55,32 @@ export const getAllPossibleAudios = async (): Promise<string> => {
 export const updateMp3ToPossibleList = async (
   mp3FilesData: string[]
 ): Promise<string> => {
-  const currentAudios = (await getAllPossibleAudios()).split("\n");
+  const currentAudiosData: StoredSongData[] = [];
+  const possibleIds: string[] = [];
+  (await getAllPossibleAudios()).split("\n").forEach((line) => {
+    const lineData = getStoredSongDataFromFileName(line);
+    possibleIds.push(lineData.id);
+    currentAudiosData.push(lineData);
+  });
 
-  for (const fileData of mp3FilesData) {
-    if (currentAudios.includes(fileData)) continue;
-    currentAudios.push(fileData);
+  for (let i = 0; i < mp3FilesData.length; i++) {
+    const fileDataSongData = getStoredSongDataFromFileName(mp3FilesData[i]);
+
+    const foundId = possibleIds.find((id) => id === fileDataSongData.id);
+    if (foundId) {
+      const indexOfCurrentData = currentAudiosData.findIndex(
+        ({ id }) => id === foundId
+      )!;
+
+      currentAudiosData[indexOfCurrentData] = fileDataSongData;
+    } else {
+      currentAudiosData.push(fileDataSongData);
+    }
   }
-
-  await fsAsync.writeFile(ALL_POSSIBLE_AUDIOS_PATH, currentAudios.join("\n"));
+  const allSongsDataInTxt = currentAudiosData
+    .map((data) => data.fileName)
+    .join("\n");
+  await fsAsync.writeFile(ALL_POSSIBLE_AUDIOS_PATH, allSongsDataInTxt);
   return ALL_POSSIBLE_AUDIOS_PATH;
 };
 

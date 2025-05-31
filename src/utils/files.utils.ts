@@ -27,3 +27,9 @@ export const deleteFile = async (filePath: string) => {
     }
   }
 };
+
+export const ensureDirectoryExists = (directoryPath: string): void => {
+  if (!fs.existsSync(directoryPath)) {
+    fs.mkdirSync(directoryPath, { recursive: true });
+  }
+};

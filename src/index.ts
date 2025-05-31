@@ -2,9 +2,11 @@
 require("dotenv").config();
 import "module-alias/register";
 import EnvChecker from "./utils/env-checker.utils";
+import { ensureDirectoryExists } from "./utils/files.utils";
+import { MUSIC_FOLDER } from "./globals";
 
 new EnvChecker().init();
-
+ensureDirectoryExists(MUSIC_FOLDER);
 import "./utils/configs.utils";
 
 import express from "express";
